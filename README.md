@@ -1,5 +1,5 @@
 # ctSOM
-analysis pipeline for somatic diagnosis on ctDNA
+Analysis pipeline for somatic diagnosis on ctDNA
 # Introduction
 ctSOM is a variant analysis pipeline designed for circulating tumor DNA (ctDNA) obtained through non-invasive liquid biopsy, serving diagnostic, prognostic, and therapeutic purposes.
 
