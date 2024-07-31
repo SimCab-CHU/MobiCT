@@ -76,7 +76,7 @@ process convertSamToFastq {
     """
 }
 
-//adapter and quality trimming
+// adapter and quality trimming
 //
 process fastpp {
     publishDir params.outdir
@@ -153,7 +153,7 @@ process collectmetrics1 {
     """
 }
 
-//generate a multi-quality control report from collected metrics data (collectmetrics1 output). 
+// Generate a multi-quality control report from collected metrics data (collectmetrics1 output). 
 //
 process multiQc1{
     publishDir params.outdir 
@@ -169,7 +169,7 @@ process multiQc1{
     """
 }
 
-//  merge the two BAM files containing:
+// Merge the two BAM files containing:
 //1: the UMI information: output of ExtractUmis process
 //2: the alignment coordinate information: output of bwaMEM process
 //
@@ -254,7 +254,7 @@ process GroupReads {
 }
 
 // 3. Generate consensus reads
-//Calculate the consensus sequence, Reads that occur as singletons are discarded by default but this can be changed
+// Calculate the consensus sequence, Reads that occur as singletons are discarded by default but this can be changed
 // by setting the –min-reads flag to 1, in so doing the single read will be considered the consensus.
 //
 process CallConsensus {
@@ -285,7 +285,7 @@ process CallConsensus {
     """
 }
 
-//Following consensus calling, the UMI group collapsing process leads to the removal of alignment coordinate information.
+// Following consensus calling, the UMI group collapsing process leads to the removal of alignment coordinate information.
 // To address this, it is necessary to convert the consensus_unmapped.bam file to the FASTQ format.
 //
 process covertSamToFastq {
@@ -339,7 +339,7 @@ process bwaMem2 {
     """
 }
 
-//Extraction of read quality metrics after deduplication
+// Extraction of read quality metrics after deduplication
 //
 process collectmetrics2 {
     publishDir params.outdir
@@ -363,7 +363,7 @@ process collectmetrics2 {
     """
 }
 
-//generate a multi-quality control report from collected metrics data (process collectmetrics2 output). 
+// Generate a multi-quality control report from collected metrics data (process collectmetrics2 output). 
 //
 process multiQc{
     publishDir params.outdir
@@ -378,7 +378,7 @@ process multiQc{
     """
 }
 
-// sort the consensus_mapped.bam with the consensus_unmapped.bam to prepare them as input for the next step
+// Sort the consensus_mapped.bam with the consensus_unmapped.bam to prepare them as input for the next step
 //
 process sortConsensus2 {
     tag "${sample}: ${consensus_mapped1[0].first()}: ${consensus_mapped1[1].name}"
@@ -405,7 +405,7 @@ process sortConsensus2 {
     """
 }
 
-//Finally, merge the consensus_mapped.bam with the consensus_unmapped.bam to retain the UMI group information.
+// Finally, merge the consensus_mapped.bam with the consensus_unmapped.bam to retain the UMI group information.
 //
 process MergeBam2 {
     tag "${sample}: ${sortConsensus2Out[0].first()}"
@@ -436,7 +436,7 @@ process MergeBam2 {
     """
 }
 
-// generate the index (.bai) of the MergeBam2 output bam file
+// Generate the index (.bai) of the MergeBam2 output bam file
 //
 process bamindex {
     tag "${sample}: ${MergeBam2Out.first()}"
@@ -457,7 +457,7 @@ process bamindex {
     """
 }
 
-// variant calling step using vardict
+// Variant calling step using vardict
 //
 process varCallvardict {
     tag "${sample}: ${bam[0].first()}: ${bam[1].name}"
@@ -496,7 +496,7 @@ process annotationVep{
     """
 }
 
-//transforming VCF file of annotation step into tsv format
+// Transforming VCF file of annotation step into tsv format
 //
 process vcf2tsv{
     publishDir params.outdir 
