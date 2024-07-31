@@ -12,7 +12,7 @@ import scipy.stats
 import warnings
 warnings.filterwarnings('ignore')
 
-#put the name of input tsv file
+# Put the name of input tsv file
 tsvfile = pd.read_csv("/path_to_tsv_file/.tsv", delimiter='\t', header=1)#, comment=None, encoding='utf-8')
 tsvfile
 ll=[]
@@ -37,7 +37,7 @@ def extractAnnotation(data,thr):
         #dataf=dataf.drop(dataf[dataf["QUAL"]<40].index)
         return dataf
 
-    data1=filtre(data)
+    data1 = filtre(data)
     
     # create a panda file contain information needed from csq column of the raw tsv file
     def create_csq(data1):
@@ -46,7 +46,7 @@ def extractAnnotation(data,thr):
             df1=df1.append({"Uploaded_variation":n[0][0],"Location":n[0][1],"Symbol":n[0][2],"Gene":n[0][3],"CDS_position":n[0][4], "HGVSc":n[0][5], "Protein_position":n[0][6], "HGVSp":n[0][7],"Amino_acids":n[0][8],"Codons":n[0][9], "canonical":n[0][10], "af":n[0][11]},ignore_index=True)
         return df1
     
-    df1= create_csq(data1)
+    df1 = create_csq(data1)
     df1["af"] = df1["af"].replace('', np.nan) # replace all columns with an empty "af" value with "nan"
 
     # Convert the "af" column to float
@@ -70,7 +70,7 @@ def extractAnnotation(data,thr):
     return [df1,listTable,data1]
 
 
-threshold=0.01
+threshold = 0.01
 
 linesTsvRaw=extractAnnotation(tsvfile,threshold)[2] # dataframe of tsv raw file  after filter function.
 list_var=extractAnnotation(tsvfile,threshold)[1] # list of variants after all filtering step containing these information: "Location","Gene","HGVSc","HGVSp","af"
