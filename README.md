@@ -22,7 +22,6 @@ the pipeline can currently perform the following
 - quality control (samtools depth, picard collectHsMetrcis, multiQc)
 - variant calling (vardict)
 - Annotation (VEP)
-# add image of pipeline
 
 # Quick Start
 1. Install nextflow.
