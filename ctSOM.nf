@@ -190,10 +190,10 @@ process MergeBam {
 
     """
     gatk MergeBamAlignment \
-    --ATTRIBUTES_TO_RETAIN X0 \ 
+    --ATTRIBUTES_TO_RETAIN X0 \
     --ATTRIBUTES_TO_REMOVE NM \
     --ATTRIBUTES_TO_REMOVE MD \
-    --ALIGNED_BAM ${umi_extracted_aligned[0]} \ 
+    --ALIGNED_BAM ${umi_extracted_aligned[0]} \
     --UNMAPPED_BAM ${umi_extracted_aligned[1]} \
     --OUTPUT "${umi_extracted_aligned[0].baseName.take(30)}_umi_extracted_aligned_merged.bam" \
     --REFERENCE_SEQUENCE ${params.ref} \
