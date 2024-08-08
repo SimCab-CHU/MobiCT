@@ -68,7 +68,7 @@ process convertSamToFastq {
     """
     gatk SamToFastq \
     -I ${ExtractUmisOut} \
-    -F "${ExtractUmisOut.baseName.take(30)}_R1.fastq" \ 
+    -F "${ExtractUmisOut.baseName.take(30)}_R1.fastq" \
     -F2 "${ExtractUmisOut.baseName.take(30)}_R2.fastq" \
     --CLIPPING_ATTRIBUTE XT \
     --CLIPPING_ACTION 2
