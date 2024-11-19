@@ -1,3 +1,8 @@
+//Replace each extension at each process
+def replaceExtension(path, newExtension) {
+    return path.baseName + newExtension
+}
+
 //Convert the demultiplexed, raw sequencing FASTQ files to BAM
 //
 process convertFastqToSam {
@@ -10,13 +15,13 @@ process convertFastqToSam {
     tuple val('sample_id'), path(fastq)
 
     output:
-    path "${fastq[0].baseName}_unmapped.bam" // Using ".baseName" permits the elimination of the file's format (".format"), leaving only the name preceding it.
+    path "${replaceExtension(fastq[0], '_unmapped.bam')}"
 
     """
     gatk FastqToSam \
     --FASTQ ${fastq[0]} \
     --FASTQ2 ${fastq[1]} \
-    --OUTPUT "${fastq[0].baseName}_unmapped.bam" \
+    --OUTPUT "${replaceExtension(fastq[0], '_unmapped.bam')}" \
     --SAMPLE_NAME Mysample1 \
     --TMP_DIR /mnt/Bioinfo/BioTS/Projets/ctDNA/MobiCT/tmp/
 
@@ -35,7 +40,7 @@ process ExtractUmis {
     path convertFastqToSamOut
 
     output:
-    path "${convertFastqToSamOut.baseName}_umi_extracted.bam"
+    path "${replaceExtension(convertFastqToSamOut, '_umi_extracted.bam')}"
 
     script:
     def bam = convertFastqToSamOut.first()
@@ -44,7 +49,7 @@ process ExtractUmis {
     """
     fgbio ExtractUmisFromBam \\
     -i ${convertFastqToSamOut} \
-    -o ${convertFastqToSamOut.baseName}_umi_extracted.bam \
+    -o ${replaceExtension(convertFastqToSamOut, '_umi_extracted.bam')} \
     -r 5M2S+T 5M2S+T \
     -t RX \
     -a true
@@ -67,8 +72,8 @@ process convertSamToFastq {
     """
     gatk SamToFastq \
     -I ${ExtractUmisOut} \
-    -F "${ExtractUmisOut.baseName.take(30)}_R1.fastq" \
-    -F2 "${ExtractUmisOut.baseName.take(30)}_R2.fastq" \
+    -F "${replaceExtension(ExtractUmisOut, '_R1.fastq')}" \
+    -F2 "${replaceExtension(ExtractUmisOut, '_R2.fastq')}" \
     --CLIPPING_ATTRIBUTE XT \
     --MAX_RECORDS_IN_RAM 50000000 \
     --CLIPPING_ACTION 2
@@ -92,9 +97,9 @@ process fastpp {
     """
     fastp \\
     -i ${convertSamToFastqOut[0]} \\
-    -o "${convertSamToFastqOut[0].baseName.take(30)}_umi_extracted_trimmed_R1.fastq" \\
+    -o "${replaceExtension(convertSamToFastqOut[0], '_umi_extracted_trimmed_R1.fastq')}" \\
     -I ${convertSamToFastqOut[1]} \\
-    -O "${convertSamToFastqOut[1].baseName.take(30)}_umi_extracted_trimmed_R2.fastq" \\
+    -O "${replaceExtension(convertSamToFastqOut[1], '_umi_extracted_trimmed_R2.fastq')}" \\
     -g -W 5 -q 20 -u 40 -x -3 -l 75 -c \
     -j fastp.json \
     -h fastp.html \
@@ -113,7 +118,7 @@ process bwaMem {
     tuple val(sample), path(fastppOut)
 
     output:
-    file "${fastppOut[0].baseName.take(30)}_umi1_extracted_aligned.bam"
+    file "${replaceExtension(fastppOut[0], '_umi1_extracted_aligned.bam')}"
 
     script:
     def bam = fastppOut.first()
@@ -125,7 +130,7 @@ process bwaMem {
     ${fastppOut[0]} \\
     ${fastppOut[1]} \\
     | \
-    samtools view -Sb -o ${fastppOut[0].baseName.take(30)}_umi1_extracted_aligned.bam
+    samtools view -Sb -o ${replaceExtension(fastppOut[0], '_umi1_extracted_aligned.bam')}
     """
 }
 
@@ -140,7 +145,7 @@ process collectmetrics1 {
     path bwaMemOut  // the output of bwaMem process
 
     output:
-    file "${bwaMemOut.baseName.take(30)}_output_hs_metrics1.txt"
+    file "${replaceExtension(bwaMemOut, '_output_hs_metrics1.txt')}"
 
 
     """
@@ -149,7 +154,7 @@ process collectmetrics1 {
     --BAIT_INTERVALS ${interval_list} \
     --TARGET_INTERVALS ${interval_list} \
     --INPUT ${bwaMemOut} \
-    --OUTPUT "${bwaMemOut.baseName.take(30)}_output_hs_metrics1.txt"
+    --OUTPUT "${replaceExtension(bwaMemOut, '_output_hs_metrics1.txt')}"
     """
 }
 
@@ -162,10 +167,10 @@ process collectmetrics1 {
      path collectmetrics1Out  // the output of collectmetrics1 process
 
      output:
-     file "${collectmetrics1Out.baseName}_reportebefore"
+     file "${replaceExtension(collectmetrics1Out, '_reportebefore.html')}"
 
      """
-     multiqc ${collectmetrics1Out} -o "${collectmetrics1Out.baseName}_reportebefore"
+     multiqc ${collectmetrics1Out} -o "${replaceExtension(collectmetrics1Out, '_reportebefore.html')}"
      """
  }
 
@@ -183,7 +188,7 @@ process MergeBam {
     path params.ref
 
     output:
-    file "${umi_extracted_aligned[0].baseName.take(30)}_umi_extracted_aligned_merged.bam"
+    file "${replaceExtension(umi_extracted_aligned[0], '_umi_extracted_aligned_merged.bam')}"
 
     script:
     def bam = umi_extracted_aligned[0].first()
@@ -195,7 +200,7 @@ process MergeBam {
     --ATTRIBUTES_TO_REMOVE MD \
     --ALIGNED_BAM ${umi_extracted_aligned[0]} \
     --UNMAPPED_BAM ${umi_extracted_aligned[1]} \
-    --OUTPUT "${umi_extracted_aligned[0].baseName.take(30)}_umi_extracted_aligned_merged.bam" \
+    --OUTPUT "${replaceExtension(umi_extracted_aligned[0], '_umi_extracted_aligned_merged.bam')}" \
     --REFERENCE_SEQUENCE ${params.ref} \
     --SORT_ORDER 'queryname' \
     --ALIGNED_READS_ONLY true \
@@ -215,7 +220,7 @@ process umiMergeFilt {
     path MergeBamOut
 
     output:
-    file "${MergeBamOut.baseName.take(30)}_merged_filtered.bam"
+    file "${replaceExtension(MergeBamOut, '_merged_filtered.bam')}"
 
     script:
     """
@@ -223,7 +228,7 @@ process umiMergeFilt {
     -f2 \
     -bh ${MergeBamOut} \
     > \
-    ${MergeBamOut.baseName.take(30)}_merged_filtered.bam
+    ${replaceExtension(MergeBamOut, '_merged_filtered.bam')}
     """
 }
 
@@ -238,13 +243,13 @@ process GroupReads {
 
 
     output:
-    file "${umiMergeFiltOut.baseName.take(30)}_umi_grouped.bam"
+    file "${replaceExtension(umiMergeFiltOut, '_umi_grouped.bam')}"
 
     script:
     """
     fgbio GroupReadsByUmi \\
     -i ${umiMergeFiltOut} \\
-    -o '${umiMergeFiltOut.baseName.take(30)}_umi_grouped.bam' \\
+    -o '${replaceExtension(umiMergeFiltOut, '_umi_grouped.bam')}' \\
     --strategy=adjacency \
     --edits=1 \
     -t RX \
@@ -266,7 +271,7 @@ process CallConsensus {
 
 
     output:
-    file "${GroupReadsOut.baseName.take(30)}_consensus_unmapped.bam"
+    file "${replaceExtension(GroupReadsOut, '_consensus_unmapped.bam')}"
 
     script:
     def bam = GroupReadsOut.first()
@@ -274,7 +279,7 @@ process CallConsensus {
     """
     fgbio CallMolecularConsensusReads \\
     -i ${GroupReadsOut} \\
-    -o '${GroupReadsOut.baseName.take(30)}_consensus_unmapped.bam' \\
+    -o '${replaceExtension(GroupReadsOut, '_consensus_unmapped.bam')}'
     --error-rate-post-umi 40 \
     --error-rate-pre-umi 45 \
     --output-per-base-tags false \
@@ -300,8 +305,8 @@ process covertSamToFastq {
     """
     gatk SamToFastq \
     -I ${CallConsensusOut} \
-    --F "${CallConsensusOut.baseName.take(30)}_consensus_unmapped_R1.fastq" \
-    --F2 "${CallConsensusOut.baseName.take(30)}_consensus_unmapped_R2.fastq" \
+    --F "${replaceExtension(CallConsensusOut, '_consensus_unmapped_R1.fastq')}" \
+    --F2 "${replaceExtension(CallConsensusOut, '_consensus_unmapped_R2.fastq')}" \
     --CLIPPING_ATTRIBUTE XT \
     --CLIPPING_ACTION 2 \
 
@@ -319,7 +324,7 @@ process bwaMem2 {
     tuple val(sample), path(covertSamToFastqOut)
 
     output:
-    file "${covertSamToFastqOut[0].baseName.take(30)}_consensus_mapped.bam"
+    file "${replaceExtension(covertSamToFastqOut[0], '_consensus_mapped.bam')}"
 
     script:
     def bam = covertSamToFastqOut.first()
@@ -334,7 +339,7 @@ process bwaMem2 {
     ${covertSamToFastqOut[0]} \\
     ${covertSamToFastqOut[1]} \\
     | \
-    samtools view -bh - > ${covertSamToFastqOut[0].baseName.take(30)}_consensus_mapped.bam
+    samtools view -bh - > ${replaceExtension(covertSamToFastqOut[0], '_consensus_mapped.bam')}
     """
 }
 
@@ -349,7 +354,7 @@ process collectmetrics2 {
     path bwaMem2Out
 
     output:
-    file "${bwaMem2Out.baseName.take(30)}_output_hs_metrics2.txt"
+    file "${replaceExtension(bwaMem2Out, '_output_hs_metrics2.txt')}"
 
 
     """
@@ -359,7 +364,7 @@ process collectmetrics2 {
     --TARGET_INTERVALS ${interval_list} \
     --COVERAGE_CAP 1000 \
     --INPUT ${bwaMem2Out} \
-    --OUTPUT "${bwaMem2Out.baseName.take(30)}_output_hs_metrics2.txt"
+    --OUTPUT ${replaceExtension(bwaMem2Out, '_output_hs_metrics2.txt')}
     """
 }
 
@@ -371,10 +376,10 @@ process multiQc{
     path collectmetrics2Out
 
     output:
-    file "${collectmetrics2Out.baseName}_reporteAfter"
+    file "${replaceExtension(collectmetrics2Out, '_reporteAfter')}"
 
     """
-    multiqc --force ${collectmetrics2Out} -o "${collectmetrics2Out.baseName}_reporteAfter"
+    multiqc --force ${collectmetrics2Out} -o "${replaceExtension(collectmetrics2Out, '_reporteAfter')}"
     """
 }
 
@@ -395,12 +400,12 @@ process sortConsensus2 {
      """
     gatk SortSam \
     -I ${consensus_mapped1[0]} \
-    --OUTPUT "${consensus_mapped1[0].baseName.take(30)}_consensus_mapped_sorted.bam" \
+    --OUTPUT "${replaceExtension(consensus_mapped1[0], '_consensus_mapped_sorted.bam')}" \
     --SORT_ORDER queryname
 
     gatk SortSam \
     -I ${consensus_mapped1[1]} \
-    --OUTPUT "${consensus_mapped1[1].baseName.take(30)}_consensus_unmapped_sorted.bam" \
+    --OUTPUT "${replaceExtension(consensus_mapped1[1], '_consensus_unmapped_sorted.bam')}" \
     --SORT_ORDER queryname
     """
 }
@@ -417,7 +422,7 @@ process MergeBam2 {
     path params.ref
 
     output:
-    file "${sortConsensus2Out[0].baseName.take(30)}_consensusMerge.bam"
+    file "${replaceExtension(sortConsensus2Out[0], '_consensusMerge.bam')}"
 
     """
     gatk MergeBamAlignment \
@@ -425,7 +430,7 @@ process MergeBam2 {
     --ATTRIBUTES_TO_RETAIN RX \
     --ALIGNED_BAM ${sortConsensus2Out[0]} \
     --UNMAPPED_BAM ${sortConsensus2Out[1]} \
-    --OUTPUT "${sortConsensus2Out[0].baseName.take(30)}_consensusMerge.bam" \
+    --OUTPUT "${replaceExtension(sortConsensus2Out[0], '_consensusMerge.bam')}" \
     --REFERENCE_SEQUENCE ${params.ref} \
     --SORT_ORDER coordinate \
     --ADD_MATE_CIGAR true \
@@ -447,13 +452,12 @@ process bamindex {
     path MergeBam2Out
 
     output:
-    path "${MergeBam2Out.baseName.take(30)}_consensusMerge.bam.bai"
+    path "${replaceExtension(MergeBam2Out, '_consensusMerge.bam.bai')}"
 
     """
     gatk BuildBamIndex \
     --INPUT ${MergeBam2Out} \
-    --OUTPUT "${MergeBam2Out.baseName.take(30)}_consensusMerge.bam.bai"
-
+    --OUTPUT "${replaceExtension(MergeBam2Out, '_consensusMerge.bam.bai')}"
     """
 }
 
@@ -470,10 +474,10 @@ process varCallvardict {
     path bed
 
     output:
-    file "${bam[0].baseName.take(30)}_consensus_vardict.vcf"
+    file "${replaceExtension(bam[0], '_consensus_vardict.vcf')}"
 
     """
-    vardict -G $params.ref -f 0.0005 -N sample_name -b ${bam[0]} -c 1 -S 2 -E 3 -g 4 $bed | $params.teststrandbias | $params.var2vcf > ${bam[0].baseName.take(30)}_consensus_vardict.vcf
+    vardict -G $params.ref -f 0.0005 -N sample_name -b ${bam[0]} -c 1 -S 2 -E 3 -g 4 $bed | $params.teststrandbias | $params.var2vcf > ${replaceExtension(bam[0], '_consensus_vardict.vcf')}
     """
 }
 
@@ -488,10 +492,10 @@ process annotationVep{
     path fasta
 
     output:
-    file "${varCallvardictOut.baseName}_vep.vcf"
+    file "${replaceExtension(varCallvardictOut, '_vep.vcf')}"
 
     """
-    vep -i ${varCallvardictOut} -o ${varCallvardictOut.baseName}_vep.vcf --cache --dir_cache ${cach} --offline --force_overwrite --vcf --numbers --refseq --symbol --hgvs --canonical --max_af --fasta ${fasta}
+    vep -i ${varCallvardictOut} -o ${replaceExtension(varCallvardictOut, '_vep.vcf')} --cache --dir_cache ${cach} --offline --force_overwrite --vcf --numbers --refseq --symbol --hgvs --canonical --max_af --fasta ${fasta}
 
     """
 }
@@ -504,10 +508,10 @@ process vcf2tsv{
     path annotationVepOut
 
     output:
-    file "${annotationVepOut.baseName}.tsv"
+    file "${replaceExtension(annotationVepOut, '.tsv')}"
 
     """
-    vcf2tsvpy --input_vcf ${annotationVepOut} --out_tsv ${annotationVepOut.baseName}.tsv
+    vcf2tsvpy --input_vcf ${annotationVepOut} --out_tsv ${replaceExtension(annotationVepOut, '.tsv')}
     """
 }
 
