@@ -1,6 +1,7 @@
 //Replace each extension at each process
 def replaceExtension(path, newExtension) {
     return path.baseName + newExtension
+
 }
 
 //Convert the demultiplexed, raw sequencing FASTQ files to BAM
