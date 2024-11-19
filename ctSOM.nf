@@ -1,5 +1,7 @@
-//Replace each extension at each process
 def replaceExtension(path, newExtension) {
+    if (path.name.endsWith('.fastq.gz')) {
+        return path.getBaseName(2) + newExtension // remove .fastq.gz
+    }
     return path.baseName + newExtension
 }
 
