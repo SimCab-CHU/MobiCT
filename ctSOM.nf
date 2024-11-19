@@ -1,15 +1,13 @@
-// ##### go to nextflow.config file and define all path
-
 //Convert the demultiplexed, raw sequencing FASTQ files to BAM
 //
 process convertFastqToSam {
     // publishDir allow you to define the path of output
     publishDir params.outdir
-    
+
     //the input received as a pairs of FASTQ files
     //
     input:
-    tuple val('sample_id'), path(fastq)         
+    tuple val('sample_id'), path(fastq)
 
     output:
     path "${fastq[0].baseName}_unmapped.bam" // Using ".baseName" permits the elimination of the file's format (".format"), leaving only the name preceding it.
@@ -19,51 +17,52 @@ process convertFastqToSam {
     --FASTQ ${fastq[0]} \
     --FASTQ2 ${fastq[1]} \
     --OUTPUT "${fastq[0].baseName}_unmapped.bam" \
-    --SAMPLE_NAME Mysample1
-    
+    --SAMPLE_NAME Mysample1 \
+    --TMP_DIR /mnt/Bioinfo/BioTS/Projets/ctDNA/MobiCT/tmp/
+
     """
 }
 
 // 1.  extraction of UMIs from the insert reads
-// it is the parameter "-r" that define the number of intial bases to extract for UMIs. in this pipeline we extract the initial 3 bases for UMIs 
+// it is the parameter "-r" that define the number of intial bases to extract for UMIs. in this pipeline we extract the initial 3 bases for UMIs
 // 5M2S+T 5M2S+T : in case of Twist kit
 //
 process ExtractUmis {
     tag "${sample}: ${convertFastqToSamOut.first()}"
     publishDir params.outdir
-    
+
     input:
-    path convertFastqToSamOut 
-    
+    path convertFastqToSamOut
+
     output:
-    path "${convertFastqToSamOut.baseName}_unmapped_umi_extracted.bam"
+    path "${convertFastqToSamOut.baseName}_umi_extracted.bam"
 
     script:
     def bam = convertFastqToSamOut.first()
- 
+
 
     """
     fgbio ExtractUmisFromBam \\
-    -i ${convertFastqToSamOut} \\
-    -o '${convertFastqToSamOut.baseName}_unmapped_umi_extracted.bam' \\
-    -r 3M3S+T 3M3S+T \
+    -i ${convertFastqToSamOut} \
+    -o ${convertFastqToSamOut.baseName}_umi_extracted.bam \
+    -r 5M2S+T 5M2S+T \
     -t RX \
     -a true
     """
 }
 
 // Convert the BAM file with UMI extracted reads to a FASTQ file
-//        
+//
 process convertSamToFastq {
     publishDir params.outdir
-    
+
     input:
-    path ExtractUmisOut 
+    path ExtractUmisOut
 
     //two output fastq file
     output:
-    tuple val('sample_id'), path("*.fastq_*")
-    
+    tuple val('sample_id'), path("*.fastq*")
+
     // "".baseName.take(30)" allow to take only the 30 first lettre of the file name.
     """
     gatk SamToFastq \
@@ -71,8 +70,9 @@ process convertSamToFastq {
     -F "${ExtractUmisOut.baseName.take(30)}_R1.fastq" \
     -F2 "${ExtractUmisOut.baseName.take(30)}_R2.fastq" \
     --CLIPPING_ATTRIBUTE XT \
+    --MAX_RECORDS_IN_RAM 50000000 \
     --CLIPPING_ACTION 2
-    
+
     """
 }
 
@@ -80,13 +80,13 @@ process convertSamToFastq {
 //
 process fastpp {
     publishDir params.outdir
-    
+
     input:
     tuple val('sample_id'), path(convertSamToFastqOut)
-    
-    
+
+
     output:
-    tuple val('sample_id'), path("*.fastq_*")
+    tuple val('sample_id'), path("*.fastq*")
 
     script:
     """
@@ -107,11 +107,11 @@ process fastpp {
 process bwaMem {
     tag "${sample}: ${fastppOut.first()}"
     publishDir params.outdir
-    
+
     input:
     path params.ref
     tuple val(sample), path(fastppOut)
-    
+
     output:
     file "${fastppOut[0].baseName.take(30)}_umi1_extracted_aligned.bam"
 
@@ -141,8 +141,8 @@ process collectmetrics1 {
 
     output:
     file "${bwaMemOut.baseName.take(30)}_output_hs_metrics1.txt"
-    
-	
+
+
     """
     picard CollectHsMetrics \
     --REFERENCE_SEQUENCE $params.ref \
@@ -153,33 +153,33 @@ process collectmetrics1 {
     """
 }
 
-// Generate a multi-quality control report from collected metrics data (collectmetrics1 output). 
-//
-process multiQc1{
-    publishDir params.outdir 
+// Generate a multi-quality control report from collected metrics data (collectmetrics1 output).
 
-    input:
-    path collectmetrics1Out  // the output of collectmetrics1 process
+ process multiQc1{
+     publishDir params.outdir
 
-    output:
-    file "${collectmetrics1Out.baseName}_reportebefore"
+     input:
+     path collectmetrics1Out  // the output of collectmetrics1 process
 
-    """
-    multiqc ${collectmetrics1Out} -o "${collectmetrics1Out.baseName}_reportebefore"
-    """
-}
+     output:
+     file "${collectmetrics1Out.baseName}_reportebefore"
+
+     """
+     multiqc ${collectmetrics1Out} -o "${collectmetrics1Out.baseName}_reportebefore"
+     """
+ }
 
 // Merge the two BAM files containing:
 //1: the UMI information: output of ExtractUmis process
 //2: the alignment coordinate information: output of bwaMEM process
 //
 process MergeBam {
-    tag "${sample}: ${umi_extracted_aligned[0].first()}: ${umi_extracted_aligned[1].name}"    
+    tag "${sample}: ${umi_extracted_aligned[0].first()}: ${umi_extracted_aligned[1].name}"
     publishDir params.outdir
 
     // The outcomes from both the ExtractUmis process and the bwaMEM process are merged according to their filenames into lists for each sample
     input:
-    tuple val(sample), path(umi_extracted_aligned) 
+    tuple val(sample), path(umi_extracted_aligned)
     path params.ref
 
     output:
@@ -203,7 +203,6 @@ process MergeBam {
     --PRIMARY_ALIGNMENT_STRATEGY MostDistant \
     --ALIGNER_PROPER_PAIR_FLAGS true \
     --CLIP_OVERLAPPING_READS false
-    
     """
 }
 
@@ -211,7 +210,7 @@ process MergeBam {
 
 process umiMergeFilt {
     publishDir params.outdir
-    
+
     input:
     path MergeBamOut
 
@@ -233,10 +232,10 @@ process umiMergeFilt {
 //
 process GroupReads {
     publishDir params.outdir
-    
+
     input:
     path umiMergeFiltOut
-    
+
 
     output:
     file "${umiMergeFiltOut.baseName.take(30)}_umi_grouped.bam"
@@ -261,10 +260,10 @@ process CallConsensus {
     tag "${sample}: ${GroupReadsOut.first()}"
 
     publishDir params.outdir
-    
+
     input:
     path GroupReadsOut
-    
+
 
     output:
     file "${GroupReadsOut.baseName.take(30)}_consensus_unmapped.bam"
@@ -290,22 +289,22 @@ process CallConsensus {
 //
 process covertSamToFastq {
     publishDir params.outdir
-    
+
     input:
-    path CallConsensusOut 
-    
+    path CallConsensusOut
+
     //two output fastq file
     output:
-    tuple val('sample_id'), path("*.fastq_*")
-    
+    tuple val('sample_id'), path("*.fastq*")
+
     """
     gatk SamToFastq \
     -I ${CallConsensusOut} \
     --F "${CallConsensusOut.baseName.take(30)}_consensus_unmapped_R1.fastq" \
     --F2 "${CallConsensusOut.baseName.take(30)}_consensus_unmapped_R2.fastq" \
     --CLIPPING_ATTRIBUTE XT \
-    --CLIPPING_ACTION 2
-    
+    --CLIPPING_ACTION 2 \
+
     """
 }
 
@@ -314,7 +313,7 @@ process covertSamToFastq {
 process bwaMem2 {
     tag "${sample}: ${covertSamToFastqOut.first()}"
     publishDir params.outdir
-    
+
     input:
     path params.ref
     tuple val(sample), path(covertSamToFastqOut)
@@ -351,19 +350,20 @@ process collectmetrics2 {
 
     output:
     file "${bwaMem2Out.baseName.take(30)}_output_hs_metrics2.txt"
-    
-	
+
+
     """
     picard CollectHsMetrics \
     --REFERENCE_SEQUENCE $params.ref \
     --BAIT_INTERVALS ${interval_list} \
     --TARGET_INTERVALS ${interval_list} \
+    --COVERAGE_CAP 1000 \
     --INPUT ${bwaMem2Out} \
-    --OUTPUT "${bwaMem2Out.baseName.take(30)}_output_hs_metrics2.txt" 
+    --OUTPUT "${bwaMem2Out.baseName.take(30)}_output_hs_metrics2.txt"
     """
 }
 
-// Generate a multi-quality control report from collected metrics data (process collectmetrics2 output). 
+// Generate a multi-quality control report from collected metrics data (process collectmetrics2 output).
 //
 process multiQc{
     publishDir params.outdir
@@ -374,7 +374,7 @@ process multiQc{
     file "${collectmetrics2Out.baseName}_reporteAfter"
 
     """
-    multiqc ${collectmetrics2Out} -o "${collectmetrics2Out.baseName}_reporteAfter"
+    multiqc --force ${collectmetrics2Out} -o "${collectmetrics2Out.baseName}_reporteAfter"
     """
 }
 
@@ -385,11 +385,11 @@ process sortConsensus2 {
     publishDir params.outdir
 
     input:
-    tuple val(sample), path(consensus_mapped1) 
+    tuple val(sample), path(consensus_mapped1)
 
     output:
     tuple val('sample'), path("*.bam")
-    
+
     script:
 
      """
@@ -397,7 +397,7 @@ process sortConsensus2 {
     -I ${consensus_mapped1[0]} \
     --OUTPUT "${consensus_mapped1[0].baseName.take(30)}_consensus_mapped_sorted.bam" \
     --SORT_ORDER queryname
-    
+
     gatk SortSam \
     -I ${consensus_mapped1[1]} \
     --OUTPUT "${consensus_mapped1[1].baseName.take(30)}_consensus_unmapped_sorted.bam" \
@@ -411,7 +411,7 @@ process MergeBam2 {
     tag "${sample}: ${sortConsensus2Out[0].first()}"
 
     publishDir params.outdir
-    
+
     input:
     tuple val('sample_id'), path(sortConsensus2Out)
     path params.ref
@@ -448,7 +448,7 @@ process bamindex {
 
     output:
     path "${MergeBam2Out.baseName.take(30)}_consensusMerge.bam.bai"
-    
+
     """
     gatk BuildBamIndex \
     --INPUT ${MergeBam2Out} \
@@ -463,17 +463,17 @@ process varCallvardict {
     tag "${sample}: ${bam[0].first()}: ${bam[1].name}"
 
     publishDir params.outdir
-    
+
    input:
     path params.ref
     tuple val('sample_id'), path(bam)
     path bed
-    
+
     output:
-    file "${bam[0].baseName.take(30)}_consensus_vardict.vcf" 
-    
+    file "${bam[0].baseName.take(30)}_consensus_vardict.vcf"
+
     """
-    vardict -G $params.ref -f 0.0005 -N sample_name -b ${bam[0]} -c 1 -S 2 -E 3 -g 4 $bed | $params.teststrandbias | $params.var2vcf -N sample_name -E -f 0.0005 > ${bam[0].baseName.take(30)}_consensus_vardict.vcf
+    vardict -G $params.ref -f 0.0005 -N sample_name -b ${bam[0]} -c 1 -S 2 -E 3 -g 4 $bed | $params.teststrandbias | $params.var2vcf > ${bam[0].baseName.take(30)}_consensus_vardict.vcf
     """
 }
 
@@ -481,17 +481,17 @@ process varCallvardict {
 //
 process annotationVep{
     publishDir params.outdir
-    
+
     input:
     path varCallvardictOut
     path cach
     path fasta
-    
+
     output:
-    file "${varCallvardictOut.baseName}_output_annotation.vcf"
+    file "${varCallvardictOut.baseName}_vep.vcf"
 
     """
-    vep -i ${varCallvardictOut} -o ${varCallvardictOut.baseName}_output_annotation.vcf --cache --dir_cache ${cach} --offline --force_overwrite --vcf --fields "Uploaded variation,Location,Gene,SYMBOL,CDS_position,HGVSc,Protein_position,HGVSp,Amino_acids,Codons,CANONICAL,MAX_AF" --symbol --hgvs --canonical --max_af --fasta ${fasta}
+    vep -i ${varCallvardictOut} -o ${varCallvardictOut.baseName}_vep.vcf --cache --dir_cache ${cach} --offline --force_overwrite --vcf --numbers --refseq --symbol --hgvs --canonical --max_af --fasta ${fasta}
 
     """
 }
@@ -499,7 +499,7 @@ process annotationVep{
 // Transforming VCF file of annotation step into tsv format
 //
 process vcf2tsv{
-    publishDir params.outdir 
+    publishDir params.outdir
     input:
     path annotationVepOut
 
@@ -514,7 +514,7 @@ process vcf2tsv{
 
 workflow {
 
-// step 1: Extraction of UMIs from the insert reads  
+// step 1: Extraction of UMIs from the insert reads
 
     // in this step the input received as a pairs of FASTQ files so we transfomr each pair to a tuple  named read_pairs_fastq
    Channel
@@ -526,20 +526,20 @@ workflow {
     FASTP= fastpp(convert2)
     bwa1= bwaMem(params.ref, FASTP)
     collectMet1 = collectmetrics1(params.ref, params.bedInterval, bwa1)
-    multiQc1(collectMet1)
+    // multiQc1(collectMet1)
 
     // Combine the two channels (extract1 and bwa1 )  and group by file name
     //
-    bwaMem.out    
+    bwaMem.out
         . set { bwa1_out } // name the bwaMem output as bwa1_out
-    ExtractUmis.out 
+    ExtractUmis.out
         . set { extract1_out } // name the ExtractUmis output as extract1_out
-    
+
     bwa1_out
         .map { filepath -> [filepath.name.toString().tokenize('.')[0], filepath ] }
         .set { bwa1_out_tuple } // extract the file name (without extension), and creates a tuple-like structure (bwa1_out_tuple) associating the processed name with the original file path of bwa1_out.
     extract1_out
-        .map { filepath -> [filepath.name.toString().tokenize('.')[0], filepath ] } 
+        .map { filepath -> [filepath.name.toString().tokenize('.')[0], filepath ] }
         .set { extract1_out_tuple } // extract the file name (without extension), and creates a tuple-like structure (extract1_out_tuple) associating the processed name with the original file path of extract1_out.
 
     // Combine and Groupe bwa1_out_tuple and extract1_out_tuple based on the shared filename
@@ -551,18 +551,18 @@ workflow {
         it.name.endsWith('extracted_aligned.bam')
       }.combinations()
     }
-    .map { 
+    .map {
         def fmeta = [ "id": "test" ]
 
-        [ fmeta, it*.first(), it*.last() ] 
+        [ fmeta, it*.first(), it*.last() ]
         [ fmeta.id, it ]
-    } 
+    }
     .set { input_merge } // stores these processed combinations as input_merge
 
     MergeBam(input_merge, params.ref)
     umiFiltr= umiMergeFilt(MergeBam.out)
 
-// step 2: Group reads by UMI    
+// step 2: Group reads by UMI
 
     groupR= GroupReads(umiFiltr)
 
@@ -575,18 +575,18 @@ workflow {
     multiQc(collectMet2)
 
     // Combine the two channels (bwa2 and consensusR1 ) and group by file name
-    bwaMem2.out    
+    bwaMem2.out
         . set { bwa2_out }
-    CallConsensus.out 
-        . set { consensusR1_out }      
-    
+    CallConsensus.out
+        . set { consensusR1_out }
+
     bwa2_out
         .map { filepath -> [filepath.name.toString().tokenize('.')[0], filepath ] }
         .set { bwa2_out_tuple }
     consensusR1_out
         .map { filepath -> [filepath.name.toString().tokenize('.')[0], filepath ] }
         .set { consensusR1_out_tuple }
-   
+
      bwa2_out_tuple
         .mix(consensusR1_out_tuple)
         .groupTuple()
@@ -595,31 +595,31 @@ workflow {
         it.name.endsWith('_consensus_mapped.bam')
       }.combinations()
     }
-    .map { 
+    .map {
         def fmeta = [ "id": "test" ]
 
-        [ fmeta, it*.first(), it*.last() ] 
+        [ fmeta, it*.first(), it*.last() ]
         [ fmeta.id, it ]
     }
     .set { input_sortConsensus2 } // stores these processed combinations as input_sortConsensus2
 
     sortConsensus2(input_sortConsensus2)
-    mergeBam2= MergeBam2(sortConsensus2.out, params.ref) 
+    mergeBam2= MergeBam2(sortConsensus2.out, params.ref)
     indexBam= bamindex(mergeBam2)
 
     // Combine the two channels (mergeBam2 and indexBam ) and group by file name
-    MergeBam2.out    
+    MergeBam2.out
         . set { mergeBam2_out }
-    bamindex.out 
-        . set { indexBam_out }      
-    
+    bamindex.out
+        . set { indexBam_out }
+
     mergeBam2_out
         .map { filepath -> [filepath.name.toString().tokenize('.')[0], filepath ] }
         .set { mergeBam2_out_tuple }
     indexBam_out
         .map { filepath -> [filepath.name.toString().tokenize('.')[0], filepath ] }
         .set { indexBam_out_tuple }
-   
+
      mergeBam2_out_tuple
         .mix(indexBam_out_tuple)
         .groupTuple()
@@ -628,12 +628,12 @@ workflow {
         it.name.endsWith('_consensusMerge.bam')
       }.combinations()
     }
-    .map { 
+    .map {
         def fmeta = [ "id": "test" ]
 
-        [ fmeta, it*.first(), it*.last() ] 
+        [ fmeta, it*.first(), it*.last() ]
         [ fmeta.id, it ]
-    } 
+    }
     .set { input_vardict } // stores these processed combinations as input_vardict
 
 // variant calling step
@@ -642,5 +642,5 @@ workflow {
     vepAnn = annotationVep(varCallvardict.out, params.cach, params.fasta)
 // transformation of VCF into tsv format
     //vcf2tsv(vepAnn)
-    
+
 }
