@@ -1,9 +1,7 @@
+//Replace each extension at each process
 def replaceExtension(path, newExtension) {
-    if (path.name.endsWith('.fastq.gz')) {
-        return path.getBaseName(2) + newExtension // remove .fastq.gz
-    }
-    return path.baseName + newExtension
-
+    return path.getSimpleName().split("_")[0] + newExtension
+    //return path.getSimpleName() + newExtension
 }
 
 //Convert the demultiplexed, raw sequencing FASTQ files to BAM
@@ -69,7 +67,7 @@ process convertSamToFastq {
 
     //two output fastq file
     output:
-    tuple val('sample_id'), path("*.fastq*")
+    tuple val('sample_id'), path("*.fastq")
 
     // "".baseName.take(30)" allow to take only the 30 first lettre of the file name.
     """
@@ -282,7 +280,7 @@ process CallConsensus {
     """
     fgbio CallMolecularConsensusReads \\
     -i ${GroupReadsOut} \\
-    -o '${replaceExtension(GroupReadsOut, '_consensus_unmapped.bam')}'
+    -o '${replaceExtension(GroupReadsOut, '_consensus_unmapped.bam')}' \\
     --error-rate-post-umi 40 \
     --error-rate-pre-umi 45 \
     --output-per-base-tags false \
@@ -535,38 +533,41 @@ workflow {
     collectMet1 = collectmetrics1(params.ref, params.bedInterval, bwa1)
     // multiQc1(collectMet1)
 
-    // Combine the two channels (extract1 and bwa1 )  and group by file name
-    //
+// Combine the two channels (extract1 and bwa1 ) and group by file name
+
     bwaMem.out
-        . set { bwa1_out } // name the bwaMem output as bwa1_out
+        .set { bwa1_out } // name the bwaMem output as bwa1_out
     ExtractUmis.out
-        . set { extract1_out } // name the ExtractUmis output as extract1_out
+        .set { extract1_out } // name the ExtractUmis output as extract1_out
 
     bwa1_out
-        .map { filepath -> [filepath.name.toString().tokenize('.')[0], filepath ] }
-        .set { bwa1_out_tuple } // extract the file name (without extension), and creates a tuple-like structure (bwa1_out_tuple) associating the processed name with the original file path of bwa1_out.
+        .map { filepath -> [filepath.name.tokenize('_')[0], filepath] }
+        // Extract the base sample name (e.g., 'P22D0165ct') and pair it with the file path
+        .set { bwa1_out_tuple }
+
     extract1_out
-        .map { filepath -> [filepath.name.toString().tokenize('.')[0], filepath ] }
-        .set { extract1_out_tuple } // extract the file name (without extension), and creates a tuple-like structure (extract1_out_tuple) associating the processed name with the original file path of extract1_out.
+        .map { filepath -> [filepath.name.tokenize('_')[0], filepath] }
+        // Extract the base sample name (e.g., 'P22D0165ct') and pair it with the file path
+        .set { extract1_out_tuple }
 
-    // Combine and Group bwa1_out_tuple and extract1_out_tuple based on the shared filename
-     bwa1_out_tuple
-        .mix(extract1_out_tuple)
-        .groupTuple()
+    // Combine and group bwa1_out_tuple and extract1_out_tuple based on the shared sample name
+    bwa1_out_tuple
+        .mix(extract1_out_tuple) // Combine the two channels
+        .groupTuple() // Group by the first element of the tuple (sample name)
         .flatMap { sample, path_list ->
-        path_list.split {
-        it.name.endsWith('extracted_aligned.bam')
-      }.combinations()
-    }
-    .map {
-        def fmeta = [ "id": "test" ]
+            path_list.split {
+                it.name.endsWith('extracted_aligned.bam') // Split by files ending with 'extracted_aligned.bam'
+            }.combinations()
+        }
+        .map { combination ->
+            def fmeta = [ "id": "test" ] // Add metadata (adjust as needed)
+            [ fmeta, combination*.first(), combination*.last() ] // Include metadata and file paths in output
+            [ fmeta.id, combination ]
+        }
+        .set { input_merge } // Store processed combinations as input_merge
 
-        [ fmeta, it*.first(), it*.last() ]
-        [ fmeta.id, it ]
-    }
-    .set { input_merge } // stores these processed combinations as input_merge
+    MergeBam(input_merge, params.ref) // Call the MergeBam process with input_merge
 
-    MergeBam(input_merge, params.ref)
     umiFiltr= umiMergeFilt(MergeBam.out)
 
 // step 2: Group reads by UMI
@@ -583,34 +584,35 @@ workflow {
 
     // Combine the two channels (bwa2 and consensusR1 ) and group by file name
     bwaMem2.out
-        . set { bwa2_out }
+        .set { bwa2_out }
     CallConsensus.out
-        . set { consensusR1_out }
+        .set { consensusR1_out }
 
     bwa2_out
-        .map { filepath -> [filepath.name.toString().tokenize('.')[0], filepath ] }
+        .map { filepath -> [filepath.name.tokenize('_')[0], filepath ] }
         .set { bwa2_out_tuple }
     consensusR1_out
-        .map { filepath -> [filepath.name.toString().tokenize('.')[0], filepath ] }
+        .map { filepath -> [filepath.name.tokenize('_')[0], filepath ] }
         .set { consensusR1_out_tuple }
 
      bwa2_out_tuple
         .mix(consensusR1_out_tuple)
         .groupTuple()
         .flatMap { sample, path_list ->
-        path_list.split {
-        it.name.endsWith('_consensus_mapped.bam')
+            path_list.split {
+            it.name.endsWith('_consensus_mapped.bam')
       }.combinations()
     }
-    .map {
+    .map { combination ->
         def fmeta = [ "id": "test" ]
 
-        [ fmeta, it*.first(), it*.last() ]
-        [ fmeta.id, it ]
+        [ fmeta, combination*.first(), combination*.last() ]
+        [ fmeta.id, combination ]
     }
     .set { input_sortConsensus2 } // stores these processed combinations as input_sortConsensus2
 
     sortConsensus2(input_sortConsensus2)
+
     mergeBam2= MergeBam2(sortConsensus2.out, params.ref)
     indexBam= bamindex(mergeBam2)
 
@@ -647,7 +649,5 @@ workflow {
     varCallvardict(params.ref, input_vardict, params.bed)
 // annotation step
     vepAnn = annotationVep(varCallvardict.out, params.cach, params.fasta)
-// transformation of VCF into tsv format
-    //vcf2tsv(vepAnn)
 
 }
