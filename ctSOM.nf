@@ -549,7 +549,7 @@ workflow {
         .map { filepath -> [filepath.name.toString().tokenize('.')[0], filepath ] }
         .set { extract1_out_tuple } // extract the file name (without extension), and creates a tuple-like structure (extract1_out_tuple) associating the processed name with the original file path of extract1_out.
 
-    // Combine and Groupe bwa1_out_tuple and extract1_out_tuple based on the shared filename
+    // Combine and Group bwa1_out_tuple and extract1_out_tuple based on the shared filename
      bwa1_out_tuple
         .mix(extract1_out_tuple)
         .groupTuple()
