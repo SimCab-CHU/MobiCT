@@ -44,4 +44,4 @@ process {
     }
  }
  ```
-- Each file outputed from MobiCT is named as follows: *sampleName_process* (*i.e.* *SampleTest_consensusMerge.bam* is the bam file output of the consensusMerge process). The sample name is returned from the **replaceExtension** function defined in the first lines of the **MobiCT.nf** file. It splits the fastq file names on a "_" separator, this splitting character can be changed at convenience depending on the structure of the user's file names. However, if the user does'nt want the file name to be splitted, he/she can comment line 3 with "//" and uncomment line 4.
+- Each file outputed from MobiCT is named as follows: *sampleName_process* (*i.e.* *SampleTest_consensusMerge.bam* is the bam file output of the consensusMerge process). The sample name is returned from the **replaceExtension** function defined in the first lines of the **MobiCT.nf** file. It splits the fastq file names on a "_" separator, this splitting character can not be changed. However, if the user does'nt want the file name to be splitted, he/she can comment line 3 with "//" and uncomment line 4.
