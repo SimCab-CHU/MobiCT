@@ -6,10 +6,6 @@ Mobict is an analysis pipeline designed for detecting SNV and small InDels in ci
 
 The pipeline is built using Nextflow, a workflow tool to run tasks across multiple compute infrastructures in a very portable manner. It uses conda containers making results highly reproducible.
 
-<picture>
- <img alt="the workflow" src="https://github.com/Oussamadl/ctSOM/blob/main/pipeline.png">
-</picture>
-
 # Quick Start
 1. Install nextflow.
 2. creat this conda environment gatk4: conda create -n gatk4 -c conda-forge -c bioconda gatk4.
@@ -45,3 +41,4 @@ process {
  }
  ```
 - Each file outputed from MobiCT is named as follows: *sampleName_process* (*i.e.* *SampleTest_consensusMerge.bam* is the bam file output of the consensusMerge process). The sample name is returned from the **replaceExtension** function defined in the first lines of the **MobiCT.nf** file. It splits the fastq file names on a "_" separator, this splitting character can not be changed. However, if the user does'nt want the file name to be splitted, he/she must remove the "_" from the file name prior to the analysis.
+- ongoing paragraph on UMI
