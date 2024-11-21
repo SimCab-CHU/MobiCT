@@ -40,7 +40,7 @@ The outcomes of your execution are stored within the directory you specified usi
 ```
 process {
    withName: convertFastqToSam {
-     ext.args = {['--TMP_DIR /mnt/Bioinfo/BioTS/Projets/ctDNA/MobiCT/tmp/'].join(' ')}
+     ext.args = {['--TMP_DIR /path/to/a/tmp/folder/'].join(' ')}
     }
  }
  ```
