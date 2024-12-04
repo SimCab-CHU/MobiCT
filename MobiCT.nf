@@ -377,10 +377,10 @@ process multiQc{
     path collectmetrics2Out
 
     output:
-    file "${replaceExtension(collectmetrics2Out, '_reporteAfter')}"
+    file "${replaceExtension(collectmetrics2Out, '_reportAfter')}"
 
     """
-    multiqc --force ${collectmetrics2Out} -o "${replaceExtension(collectmetrics2Out, '_reporteAfter')}"
+    multiqc --force ${collectmetrics2Out} -o "${replaceExtension(collectmetrics2Out, '_reportAfter')}"
     """
 }
 
