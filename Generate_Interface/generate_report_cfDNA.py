@@ -442,16 +442,18 @@ def getTemplate():
 #######################################################
 parser = argparse.ArgumentParser(description='This function is used to create a Adivar-like report for Twist cfDNA runs')
 parser.add_argument('-v', '--variants', type=str, help='path to the directory containing the vcf files')
-parser.add_argument('-s', '--stats', type=str, help='path to to the directory containing the Picard metrics')
+parser.add_argument('-s', '--stats', type=str, help='path to to the directory containing the metrics')
+parser.add_argument('-k', '--kpath', type=str, help='path to to the cov_vaf_probs csv file')
+parser.add_argument('-w', '--whitelist', type=str, help='path to to the whitelist txt file')
+parser.add_argument('-b', '--bed', type=str, help='path to to the bedfile')
 parser.add_argument('-o', '--output', type=str, help='output path')
 args = parser.parse_args()
 
-k_path = "/mnt/chu-ngs/Labos/BioTS/SOMAT/Pour_transit/Simon/cov_vaf_probs_k3_clean.csv"
-whitelist_file = "/mnt/chu-ngs/Labos/BioTS/SOMAT/Pour_transit/Simon/whiteList_JV.txt"
+k_path = args.kpath
+whitelist_file = args.whitelist
 
-#to_keep = ['NM_005228', 'NM_033360', 'NM_004333']
-to_keep = ['NM_002524', 'NM_002529', 'NM_002107', 'NM_020630', 'NM_000314', 'NM_000141', 'NM_033360', 'NM_000321', 'NM_001014431', 'NM_002530', 'NM_002168', 'NM_000546', 'NM_004448', 'NM_005324', 'NM_000455', 'NM_002067', 'NM_203500', 'NM_004304', 'NM_005896', 'NM_000516', 'NM_001904', 'NM_006218', 'NM_000142', 'NM_006206', 'NM_000222', 'NM_003537', 'NM_001122740', 'NM_005228', 'NM_001127500', 'NM_004333', 'NM_023110', 'NM_002072', 'NM_017617']
-
+to_keep = pd.read_csv(args.bed,sep="\t",header=None)
+to_keep = [to_keep[3]]
 kept_csq = ['TFBS_ablation', 'TFBS_amplification', 'TF_binding_site_variant', 'regulatory_region_ablation', 'regulatory_region_amplification', 'transcript_ablation', 'splice_acceptor_variant', 'splice_donor_variant', 'stop_gained', 'frameshift_variant', 'stop_lost', 'start_lost', 'transcript_amplification', 'inframe_insertion', 'inframe_deletion', 'missense_variant', 'protein_altering_variant', 'splice_region_variant']
 
 k3 = pd.read_csv(k_path, sep="\t")
