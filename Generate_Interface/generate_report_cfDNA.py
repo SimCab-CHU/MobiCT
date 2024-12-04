@@ -466,7 +466,7 @@ path = args.variants
 samples=[]
 for i in os.listdir(path):
     if i.endswith(".vcf"):
-        samples.append(i.split(".vcf")[0])
+        samples.append(i.split("_vep.vcf")[0])
 
 samples = np.unique(samples)
 
@@ -498,18 +498,21 @@ for sample_name in samples:
     output_report = args.output+"/"+sample_name+".html"
 
     # Gather statistics on the sample
-    picard = pd.read_csv(args.stats+"/"+sample_name+".txt",sep='\t',engine='python',skiprows=lambda x: x not in [6,7])
-    metrics = pd.read_csv(args.stats+"/"+sample_name+"/multiqc_data/multiqc_picard_HsMetrics.txt",sep="\t")
+    picard = pd.read_csv(args.stats+"/"+sample_name+"_output_hs_metrics1.txt",sep='\t',engine='python',skiprows=lambda x: x not in [6,7])
+    metrics = pd.read_csv(args.stats+"/"+sample_name+"_reporteAfter/multiqc_data/multiqc_picard_HsMetrics.txt",sep="\t")
 
     m = round(metrics['MIN_TARGET_COVERAGE'][0])
     M = round(metrics['MAX_TARGET_COVERAGE'][0])
     ave = round(metrics['MEAN_TARGET_COVERAGE'][0])
     dedup_rate = round(ave*100/picard['MEAN_TARGET_COVERAGE'][0],1)
     N = round(metrics['ON_TARGET_BASES'][0])
-    LoD = min(k3.loc[[i<ave for i in k3['p99']]]['vaf'])
+    if ave<200:
+        LoD = 50
+    else:
+        LoD = min(k3.loc[[i<ave for i in k3['p99']]]['vaf'])
 
     # Get variants annotated with vep
-    subprocess.run("grep -v \"^##\" "+args.variants+"/"+sample_name+".vcf > "+args.variants+"/"+sample_name+".tsv", shell=True, check=True)
+    subprocess.run("grep -v \"^##\" "+args.variants+"/"+sample_name+"_vep.vcf > "+args.variants+"/"+sample_name+".tsv", shell=True, check=True)
     variant_data = pd.read_csv(args.variants+"/"+sample_name+".tsv",sep="\t")
 
     # Build output report
