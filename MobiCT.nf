@@ -23,9 +23,7 @@ process convertFastqToSam {
     --FASTQ ${fastq[0]} \
     --FASTQ2 ${fastq[1]} \
     --OUTPUT "${replaceExtension(fastq[0], '_unmapped.bam')}" \
-    --SAMPLE_NAME Mysample1 \
-    --TMP_DIR /mnt/Bioinfo/BioTS/Projets/ctDNA/MobiCT/tmp/
-
+    --SAMPLE_NAME Mysample1
     """
 }
 
