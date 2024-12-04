@@ -446,6 +446,7 @@ parser.add_argument('-s', '--stats', type=str, help='path to to the directory co
 parser.add_argument('-k', '--kpath', type=str, help='path to to the cov_vaf_probs csv file')
 parser.add_argument('-w', '--whitelist', type=str, help='path to to the whitelist txt file')
 parser.add_argument('-b', '--bed', type=str, help='path to to the bedfile')
+parser.add_argument('-t', '--template', type=str, help='path to to the template.html file')
 parser.add_argument('-o', '--output', type=str, help='output path')
 args = parser.parse_args()
 
@@ -458,7 +459,6 @@ kept_csq = ['TFBS_ablation', 'TFBS_amplification', 'TF_binding_site_variant', 'r
 
 k3 = pd.read_csv(k_path, sep="\t")
 command = "mkdir -p "+args.output
-print(command)
 subprocess.run(command, shell=True)
 
 
@@ -492,7 +492,7 @@ x="""                  <tr class="##color##" style="height:40px">
                   </tr>"""
 
 for sample_name in samples:
-    print(sample_name)
+    print("Doing " + sample_name + ":")
 
     # Set the output report
     output_report = args.output+"/"+sample_name+".html"
@@ -649,7 +649,7 @@ for sample_name in samples:
 
 # create run.html -----------------
 
-run = "/mnt/chu-ngs/Labos/BioTS/SOMAT/Pour_transit/Simon/run_template.html"
+run = args.template
 run_report = args.output+"/run.html"
 file = codecs.open(run, "r", "utf-8").read()
 
