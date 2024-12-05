@@ -9,6 +9,8 @@ import os
 import codecs
 import argparse
 import subprocess
+import warnings
+warnings.filterwarnings("ignore", category=FutureWarning)
 
 def whiteAnnot(p1l,gene,path):
     if p1l == "":
@@ -454,7 +456,7 @@ k_path = args.kpath
 whitelist_file = args.whitelist
 
 to_keep = pd.read_csv(args.bed,sep="\t",header=None)
-to_keep = [to_keep[3]]
+to_keep = np.unique(to_keep[3]).tolist()
 kept_csq = ['TFBS_ablation', 'TFBS_amplification', 'TF_binding_site_variant', 'regulatory_region_ablation', 'regulatory_region_amplification', 'transcript_ablation', 'splice_acceptor_variant', 'splice_donor_variant', 'stop_gained', 'frameshift_variant', 'stop_lost', 'start_lost', 'transcript_amplification', 'inframe_insertion', 'inframe_deletion', 'missense_variant', 'protein_altering_variant', 'splice_region_variant']
 
 k3 = pd.read_csv(k_path, sep="\t")
