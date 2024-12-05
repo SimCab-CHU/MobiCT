@@ -501,7 +501,7 @@ for sample_name in samples:
 
     # Gather statistics on the sample
     picard = pd.read_csv(args.stats+"/"+sample_name+"_output_hs_metrics1.txt",sep='\t',engine='python',skiprows=lambda x: x not in [6,7])
-    metrics = pd.read_csv(args.stats+"/"+sample_name+"_reporteAfter/multiqc_data/multiqc_picard_HsMetrics.txt",sep="\t")
+    metrics = pd.read_csv(args.stats+"/"+sample_name+"_reportAfter/multiqc_data/multiqc_picard_HsMetrics.txt",sep="\t")
 
     m = round(metrics['MIN_TARGET_COVERAGE'][0])
     M = round(metrics['MAX_TARGET_COVERAGE'][0])
