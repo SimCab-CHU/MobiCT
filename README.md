@@ -7,20 +7,28 @@ Mobict is an analysis pipeline designed for detecting SNV and small InDels in ci
 The pipeline is built using Nextflow, a workflow tool to run tasks across multiple compute infrastructures in a very portable manner. It uses conda containers making results highly reproducible.
 
 # Quick Start
+
 1. Install nextflow.
-2. creat this conda environment gatk4: conda create -n gatk4 -c conda-forge -c bioconda gatk4.
-3. activate the conda environment you create, then istall the following tools:
-  - fgbio  :  conda install bioconda::fgbio
-  - bwa v0.7.17   :  conda install bioconda::bwa
-  - fastp v0.23.2 :  conda install bioconda::fastp
-  - samtools v1.17 :  conda install bioconda::samtools
-  - picard : conda install bioconda::picard
-  - vardict :  conda install bioconda::vardict
-  - VEP :  conda install bioconda::ensembl-vep
-5. Download the reference genome, and extract all files related to it through indexing: hg38.fa.amb, hg38.fa.ann, hg38.fa.bwt, hg38.fa.fai, hg38.fa.pac, hg38.fa.sa
-6. Download the dataset needed for VEP use (Home_sapiens.....fa.gz , and the cache: homo_sapiens_vep_......tar.gz)
-7. On nextflow.config file, define all input and output paths of your pipeline 
-8. Download the pipeline and Run it on your Dataset:
+2. Create this conda environment MobiCT:
+
+    `conda create -n MobiCT -c conda-forge -c bioconda`
+
+4. Activate this conda environment, then istall the following tools:
+   
+    - fgbio
+    - bwa
+    - fastp
+    - samtools
+    - picard
+    - vardict
+    - VEP
+  
+    `conda install bioconda::fgbio bioconda::bwa bioconda::fastp bioconda::samtools bioconda::picard bioconda::vardict bioconda::ensembl-vep`
+      
+5. Download the reference genome and its indexed
+6. Download the dataset needed for VEP use
+7. On nextflow.config file, edit input and output paths
+8. Run it on your Dataset:
    * Nextflow -log /output_directory/my.log run MobiCT.nf -with-report /output_directory/report.html -with-timeline /output_directory/timeline.html -with-dag /output_directory/flowchart.dot
 
 # Pipeline output
@@ -31,13 +39,6 @@ The outcomes of your execution are stored within the directory you specified usi
 - flowchart.dot: The **.dot** format is a standard format for describing graphs. it visualizes the workflow's structure and dependencies between processes.
 
 # Tips & tricks
-- Due to the high coverage required for ctDNA analysis, the files are usually very large, hence the *tmp* dir needs to have enough memory for run the *convertFastqToSam* processes. The following can be added to the **nextflow.config** file:
 
-```
-process {
-   withName: convertFastqToSam {
-     ext.args = {['--TMP_DIR /path/to/a/tmp/folder/'].join(' ')}
-    }
- }
- ```
+- Each file outputed from MobiCT is named as follows: *sampleName_process* (*i.e.* *SampleTest_consensusMerge.bam* is the bam file output of the consensusMerge process). The sample name is returned from the **replaceExtension** function defined in the first lines of the **MobiCT.nf** file. It splits the fastq file names on a "_" separator, this splitting character can not be changed. However, if the user does'nt want the file name to be splitted, he/she must remove the "_" from the file name prior to the analysis.
 - ongoing paragraph on UMI
