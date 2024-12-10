@@ -25,7 +25,7 @@ The pipeline is built using Nextflow, a workflow tool to run tasks across multip
   
     `conda install bioconda::fgbio bioconda::bwa bioconda::fastp bioconda::samtools bioconda::picard bioconda::vardict bioconda::ensembl-vep`
       
-5. Download the reference genome and its indexed
+5. Download the reference genome, its indexed and dict
 6. Download the dataset needed for VEP use
 7. On nextflow.config file, edit input and output paths
 8. Run it on your Dataset:

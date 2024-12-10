@@ -4,14 +4,14 @@
 process ConvertFastqToSam {
     tag "$sample_id"
 
-    publishDir params.outdir
+    publishDir "${params.outdir}/${sample_id}", mode: 'copy', overwrite: true
 
     input:
         tuple val('sample_id'), path(fastq)
         val extension
 
     output:
-        tuple val(sample_id), path("${sample_id}${extension}.bam")
+        tuple val(sample_id), file("${sample_id}${extension}.bam")
 
     """
     gatk FastqToSam \
@@ -30,14 +30,14 @@ process ConvertFastqToSam {
 process ExtractUmis {
     tag "$sample_id"
 
-    publishDir params.outdir
+    publishDir "${params.outdir}/${sample_id}", mode: 'copy', overwrite: true
 
     input:
         tuple val(sample_id), path(bam_file)
         val extension
 
     output:
-        tuple val(sample_id), path("${sample_id}${extension}.bam")
+        tuple val(sample_id), file("${sample_id}${extension}.bam")
 
     """
     fgbio ExtractUmisFromBam \
@@ -53,14 +53,14 @@ process ExtractUmis {
 process ConvertSamToFastq {
     tag "$sample_id"
 
-    publishDir params.outdir
+    publishDir "${params.outdir}/${sample_id}", mode: 'copy', overwrite: true
 
     input:
         tuple val(sample_id), path(bam_file)
         val extension
 
     output:
-        tuple val(sample_id), path("${sample_id}${extension}.R[1,2].fq")
+        tuple val(sample_id), file("${sample_id}${extension}.R[1,2].fq")
 
     """
     gatk SamToFastq \
@@ -77,16 +77,16 @@ process ConvertSamToFastq {
 process Fastp {
     tag "$sample_id"
 
-    publishDir params.outdir
+    publishDir "${params.outdir}/${sample_id}", mode: 'copy', overwrite: true
 
     input:
         tuple val(sample_id), path(fastq)
         val extension
 
     output:
-        tuple val(sample_id), path("${sample_id}${extension}.R[1,2].fq")
-        file "${sample_id}_fastp.json"
-        file "${sample_id}_fastp.html"
+        tuple val(sample_id), file("${sample_id}${extension}.R[1,2].fq")
+        file "${sample_id}${extension}_fastp.json"
+        file "${sample_id}${extension}_fastp.html"
 
     script:
     """
@@ -96,8 +96,8 @@ process Fastp {
         -I ${fastq[1]} \
         -O ${sample_id}${extension}.R2.fq \
         -g -W 5 -q 20 -u 40 -x -3 -l 75 -c \
-        -j ${sample_id}_fastp.json \
-        -h ${sample_id}_fastp.html \
+        -j ${sample_id}${extension}_fastp.json \
+        -h ${sample_id}${extension}_fastp.html \
         -w 12
     """
 }
@@ -107,7 +107,7 @@ process Fastp {
 process BWAmem {
     tag "$sample_id"
     
-    publishDir params.outdir
+    publishDir "${params.outdir}/${sample_id}", mode: 'copy', overwrite: true
 
     input:
         tuple val(sample_id), path(fastq)
@@ -134,7 +134,7 @@ process BWAmem {
 process MergeBam {
     tag "$sample_id"
     
-    publishDir params.outdir
+    publishDir "${params.outdir}/${sample_id}", mode: 'copy', overwrite: true
 
     input:
         tuple val(sample_id), path(bam_aligned)
@@ -168,7 +168,7 @@ process MergeBam {
 process UmiMergeFilt {
     tag "$sample_id"
 
-    publishDir params.outdir
+    publishDir "${params.outdir}/${sample_id}", mode: 'copy', overwrite: true
 
     input:
         tuple val(sample_id), path(bam)
@@ -190,7 +190,7 @@ process UmiMergeFilt {
 process GroupReads {
     tag "$sample_id"
 
-    publishDir params.outdir
+    publishDir "${params.outdir}/${sample_id}", mode: 'copy', overwrite: true
 
     input:
         tuple val(sample_id), path(bam)
@@ -218,7 +218,7 @@ process GroupReads {
 process CallConsensus {
     tag "$sample_id"
 
-    publishDir params.outdir
+    publishDir "${params.outdir}/${sample_id}", mode: 'copy', overwrite: true
 
     input:
         tuple val(sample_id), path(bam)
@@ -265,7 +265,7 @@ workflow RerunBWAmem {
 process SortConsensus {
     tag "$sample_id"
 
-    publishDir params.outdir
+    publishDir "${params.outdir}/${sample_id}", mode: 'copy', overwrite: true
 
     input:
         tuple val(sample_id), path(bam)
@@ -299,7 +299,7 @@ workflow RerunSortConsensus {
 process MergeBam2 {
     tag "$sample_id"
     
-    publishDir params.outdir
+    publishDir "${params.outdir}/${sample_id}", mode: 'copy', overwrite: true
 
     input:
         tuple val(sample_id), path(bam_aligned)
@@ -331,7 +331,7 @@ process MergeBam2 {
 process VarDict {
     tag "$sample_id"
     
-    publishDir params.outdir
+    publishDir "${params.outdir}/${sample_id}", mode: 'copy', overwrite: true
 
     input:
         tuple val(sample_id), path(bami)
@@ -359,7 +359,7 @@ process VarDict {
 process AnnotationVEP {
     tag "$sample_id"
 
-    publishDir params.outdir
+    publishDir "${params.outdir}/${sample_id}", mode: 'copy', overwrite: true
 
     input:
         tuple val(sample_id), path(vcf)
@@ -387,14 +387,37 @@ process AnnotationVEP {
     """
 }
 
+process BedToIntervalList {
+    tag "$sample_id"
+
+    publishDir "${params.outdir}/${sample_id}", mode: 'copy', overwrite: true
+
+    input:
+        val sample_id
+        path dict
+        path bed
+        val extension
+
+    output:
+        file "${sample_id}${extension}.interval_list"
+    
+    """
+    picard BedToIntervalList \
+        --SEQUENCE_DICTIONARY ${dict} \
+        --INPUT ${bed} \
+        --OUTPUT ${sample_id}${extension}.interval_list
+    """
+}
+
 // Extraction of read quality metrics before deduplication
 process CollectHsMetrics {
     tag "$sample_id"
 
-    publishDir params.outdir
+    publishDir "${params.outdir}/${sample_id}", mode: 'copy', overwrite: true
 
     input:
         tuple val(sample_id), file(bam)
+        file bed
         val extension
 
     output:
@@ -403,8 +426,8 @@ process CollectHsMetrics {
     """
     picard CollectHsMetrics \
         --REFERENCE_SEQUENCE ${params.ref} \
-        --BAIT_INTERVALS ${params.bedInterval} \
-        --TARGET_INTERVALS ${params.bedInterval} \
+        --BAIT_INTERVALS ${bed} \
+        --TARGET_INTERVALS ${bed} \
         --INPUT ${bam} \
         --OUTPUT ${sample_id}${extension}.txt
     """
@@ -413,36 +436,18 @@ process CollectHsMetrics {
 workflow RerunCollectHsMetrics {
     take:
         tuple_input
+        bed
         extension
     main:
-        CollectHsMetrics(tuple_input, extension)
+        CollectHsMetrics(tuple_input, bed, extension)
     emit:
         final_out = CollectHsMetrics.out
-}
-
-// Generate a multi-quality control report from collected metrics data (process
-// collectmetrics2 output).
-process MultiQC {
-    tag "${sample_id}"
-    
-    publishDir params.outdir
-
-    input:
-        tuple val(sample_id), path(file)
-        val extension
-
-    output:
-        tuple val(sample_id), file("${sample_id}${extension}")
-
-    """
-    multiqc ${params.outdir} -o ${sample_id}${extension}
-    """
 }
 
 process BCFtools_stats {
     tag "${sample_id}"
     
-    publishDir params.outdir
+    publishDir "${params.outdir}/${sample_id}", mode: 'copy', overwrite: true
 
     input:
         tuple val(sample_id), path(file)
@@ -456,10 +461,32 @@ process BCFtools_stats {
     """
 }
 
+// Generate a multi-quality control report from collected metrics data (process
+// collectmetrics2 output).
+process MultiQC {
+    tag "${sample_id}"
+    
+    publishDir "${params.outdir}/${sample_id}", mode: 'copy', overwrite: true
+
+    input:
+        tuple val(sample_id), path(file)
+        val extension
+
+    output:
+        tuple val(sample_id), file("${sample_id}${extension}")
+
+    """
+    multiqc ${params.outdir}/${sample_id} -o ${sample_id}${extension}
+    """
+}
+
 workflow {
     Channel.fromFilePairs(params.fastq, checkIfExists:true)
         .filter{ v -> v=~ params.filter_fastq}
         .set{read_pairs_fastq}
+    
+    sample_id =read_pairs_fastq.map { it[0] }
+    fastqs =read_pairs_fastq.map { it[1] }
 
     // 1. Preprocess deduplication
     ConvertFastqToSam(read_pairs_fastq, ".1.unmapped")
@@ -486,8 +513,9 @@ workflow {
     AnnotationVEP(VarDict.out, ".4.vardict.vep")
 
     // Quality Controls
-    CollectHsMetrics(BWAmem.out, ".QC.HsMetrics1")
-    RerunCollectHsMetrics(RerunBWAmem.out.final_out, ".QC.HsMetrics3")
+    BedToIntervalList(sample_id, params.dict, params.bed, "")
+    CollectHsMetrics(BWAmem.out, BedToIntervalList.out, ".QC.HsMetrics.1")
+    RerunCollectHsMetrics(RerunBWAmem.out.final_out, BedToIntervalList.out, ".QC.HsMetrics.3")
     BCFtools_stats(AnnotationVEP.out, ".QC.bcftools_stats")
     MultiQC(BCFtools_stats.out, ".QC.multiQC")
 }
