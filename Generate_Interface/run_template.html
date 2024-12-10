@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Results MobiCT</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="../ressources/lib//w3.css" />
+    <link rel="stylesheet" href="../ressources/lib/fontawesome-free-5.3.1-web/css/all.css" />
+    <link rel="stylesheet" href="../ressources/lib//datatables/datatables.min.css" />
+    <style>
+                table.dataTable tbody tr.selected {
+                    background-color: #ddffff !important;
+                }
+                table.dataTable tbody tr.selected:hover{
+                    color:#FFFF!important;background-color:#9e9e9e!important
+                }
+                .dataTables_wrapper {
+                    padding-top:43px !important;
+                }
+				.blink {
+  animation: blink-animation 2s steps(5, start) infinite;
+  -webkit-animation: blink-animation 2s steps(5, start) infinite;
+}
+@keyframes blink-animation {
+  to {
+    visibility: hidden;
+  }
+}
+@-webkit-keyframes blink-animation {
+  to {
+    visibility: hidden;
+  }
+}
+            </style>
+  </head>
+  <body>
+    <!-- Top container -->
+    <div class="w3-bar w3-top w3-black w3-large" style="z-index:4">
+      <a href="../index_twistcfDNA.html" class="w3-left w3-bar-item w3-button w3-teal"><i class="fa fa-home"></i></a>
+    </div>
+
+    <div class="w3-main" style="margin-left:100px;margin-right:100px;margin-top:43px;">
+ <div id="ref" class="w3-center" style="padding-top:43px;">
+<button class="w3-button w3-teal" onclick="location.reload();">Refresh the page</button>
+</div>
+        <div id="runs" class="w3-container" style="padding-top:43px;">
+          <table id="T_runs" class="w3-table-all w3-hoverable w3-centered">
+            <thead>
+              <tr>
+                <th>Sample Name</th>
+              </tr>
+            </thead>
+            <tbody>
+				<!--ADD RUN-->
+            </tbody>
+            <tfoot>
+              <tr>
+                <th>Sample Name</th>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+    </div>
+</body>
+  <!-- JS scripts -->
+  <!-- sidebar/menu -->
+  <script>
+        // Get the Sidebar
+        var Sidebar = document.getElementById("Sidebar");
+
+        // Get the DIV with overlay effect
+        var overlayBg = document.getElementById("myOverlay");
+
+        // Toggle between showing and hiding the sidebar, and add overlay effect
+        function w3_open() {
+            if (Sidebar.style.display === 'block') {
+                Sidebar.style.display = 'none';
+                overlayBg.style.display = "none";
+            } else {
+                Sidebar.style.display = 'block';
+                overlayBg.style.display = "block";
+            }
+        }
+
+        // Close the sidebar with the close button
+        function w3_close() {
+            Sidebar.style.display = "none";
+            overlayBg.style.display = "none";
+        }
+
+
+        </script>
+  <script type="text/javascript" src="../ressources/lib/datatables/datatables.min.js"></script>
+  <script>
+  $('body').on('mousedown', 'tr[url]', function(e){
+      var click = e.which;
+      var url = $(this).attr('url');
+      if(url){
+          if(click == 2 || (click == 1 && (e.ctrlKey || e.metaKey))){
+              window.open(url, '_blank');
+              window.focus();
+          }
+          else if(click == 1){
+              window.location.href = url;
+          }
+          return true;
+      }
+  });
+
+            $(document).ready(function() {
+                $('#T_runs tfoot th').each( function () {
+                    var title = $(this).text();
+                    $(this).html( '<input type="text" placeholder="Search '+title+'" style="width:100%" />' );
+                } );
+
+                var table = $('#T_runs').DataTable({
+                    paging:true,
+		    order: [[1, 'desc']],
+                });
+
+                table.columns().every( function () {
+                    var that = this;
+
+                    $( 'input', this.footer() ).on( 'keyup change', function () {
+                        if ( that.search() !== this.value ) {
+                            that
+                                .search( this.value )
+                                .draw();
+                        }
+                    });
+                });
+            });
+        </script>
+</html>
