@@ -62,73 +62,44 @@
         </div>
     </div>
 </body>
-  <!-- JS scripts -->
-  <!-- sidebar/menu -->
-  <script>
-        // Get the Sidebar
-        var Sidebar = document.getElementById("Sidebar");
+	
+<!-- JS scripts -->
+	
+<script type="text/javascript" src="../ressources/lib/datatables/datatables.min.js"></script>
+<script>
+$('body').on('mousedown', 'tr[url]', function(e){
+    var click = e.which;
+    var url = $(this).attr('url');
+    if(url){
+        if(click == 2 || (click == 1 && (e.ctrlKey || e.metaKey))){
+            window.open(url, '_blank');
+            window.focus();
+        }
+        else if(click == 1){
+            window.location.href = url;
+        }
+        return true;
+    }
+});
 
-        // Get the DIV with overlay effect
-        var overlayBg = document.getElementById("myOverlay");
+$(document).ready(function() {
+    // Initialize the DataTable
+    var table = $('#T_runs').DataTable();
 
-        // Toggle between showing and hiding the sidebar, and add overlay effect
-        function w3_open() {
-            if (Sidebar.style.display === 'block') {
-                Sidebar.style.display = 'none';
-                overlayBg.style.display = "none";
-            } else {
-                Sidebar.style.display = 'block';
-                overlayBg.style.display = "block";
+    // Enable column-based search
+    table.columns().every(function () {
+        var that = this;
+
+        // Attach event listener to the input elements in the footer
+        $('input', this.footer()).on('keyup change', function () {
+            if (that.search() !== this.value) {
+                that
+                    .search(this.value)
+                    .draw();
             }
-        }
-
-        // Close the sidebar with the close button
-        function w3_close() {
-            Sidebar.style.display = "none";
-            overlayBg.style.display = "none";
-        }
-
-
-        </script>
-  <script type="text/javascript" src="../ressources/lib/datatables/datatables.min.js"></script>
-  <script>
-  $('body').on('mousedown', 'tr[url]', function(e){
-      var click = e.which;
-      var url = $(this).attr('url');
-      if(url){
-          if(click == 2 || (click == 1 && (e.ctrlKey || e.metaKey))){
-              window.open(url, '_blank');
-              window.focus();
-          }
-          else if(click == 1){
-              window.location.href = url;
-          }
-          return true;
-      }
-  });
-
-            $(document).ready(function() {
-                $('#T_runs tfoot th').each( function () {
-                    var title = $(this).text();
-                    $(this).html( '<input type="text" placeholder="Search '+title+'" style="width:100%" />' );
-                } );
-
-                var table = $('#T_runs').DataTable({
-                    paging:true,
-		    order: [[1, 'desc']],
-                });
-
-                table.columns().every( function () {
-                    var that = this;
-
-                    $( 'input', this.footer() ).on( 'keyup change', function () {
-                        if ( that.search() !== this.value ) {
-                            that
-                                .search( this.value )
-                                .draw();
-                        }
-                    });
-                });
-            });
-        </script>
+        });
+    });
+});
+      </script>
 </html>
+
