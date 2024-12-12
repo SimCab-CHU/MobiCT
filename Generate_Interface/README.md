@@ -9,6 +9,6 @@
 3. Download and unzip the *ressources* file (the **ressources** directory must be in the **/path/to/the/output/directory/**)
 4. Execute generate_interface_MobiCT.py
 ```
-python generate_interface_MobiCT.py -v /path/to/the/output/directory/variants/ -s /path/to/the/output/directory/stats/ -o /path/to/the/output/directory/report/
+python generate_report_MobiCT-vf.py -i /path/to/MobiCT/ouput/directory/ -k /path/to/the/cov_vaf_probs/csv/file -w /path/to/the/whitelist/txt/file -b /path/to/the/bed/file -t /path/to/the/template.html/file -o /output/path/
 ```
 6. Enjoy!
