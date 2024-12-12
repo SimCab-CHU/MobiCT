@@ -137,8 +137,7 @@ process MergeBam {
     publishDir "${params.outdir}/${sample_id}", mode: 'copy', overwrite: true
 
     input:
-        tuple val(sample_id), path(bam_aligned)
-        tuple val(sample_id), path(bam_unmapped)
+        tuple val(sample_id), path(bam_aligned), path(bam_unmapped)
         val extension
 
 
@@ -302,8 +301,7 @@ process MergeBam2 {
     publishDir "${params.outdir}/${sample_id}", mode: 'copy', overwrite: true
 
     input:
-        tuple val(sample_id), path(bam_aligned)
-        tuple val(sample_id), path(bam_unmapped)
+        tuple val(sample_id), path(bam_aligned), path(bam_unmapped)
         val extension
 
     output:
@@ -388,24 +386,21 @@ process AnnotationVEP {
 }
 
 process BedToIntervalList {
-    tag "$sample_id"
-
-    publishDir "${params.outdir}/${sample_id}", mode: 'copy', overwrite: true
+    publishDir "${params.outdir}", mode: 'copy', overwrite: true
 
     input:
-        val sample_id
         path dict
         path bed
         val extension
 
     output:
-        file "${sample_id}${extension}.interval_list"
+        file "${extension}.interval_list"
     
     """
     picard BedToIntervalList \
         --SEQUENCE_DICTIONARY ${dict} \
         --INPUT ${bed} \
-        --OUTPUT ${sample_id}${extension}.interval_list
+        --OUTPUT ${extension}.interval_list
     """
 }
 
@@ -484,9 +479,6 @@ workflow {
     Channel.fromFilePairs(params.fastq, checkIfExists:true)
         .filter{ v -> v=~ params.filter_fastq}
         .set{read_pairs_fastq}
-    
-    sample_id =read_pairs_fastq.map { it[0] }
-    fastqs =read_pairs_fastq.map { it[1] }
 
     // 1. Preprocess deduplication
     ConvertFastqToSam(read_pairs_fastq, ".1.unmapped")
@@ -494,6 +486,7 @@ workflow {
     ConvertSamToFastq(ExtractUmis.out, ".1.umi_extracted")
     Fastp(ConvertSamToFastq.out, ".1.umi_extracted.trimmed")
     BWAmem(Fastp.out[0], "-t 10", ".1.umi_extracted.aligned")
+    BWAmem.out.join(ExtractUmis.out).set{bams_umis}
     MergeBam(BWAmem.out, ExtractUmis.out, ".1.merged")
     UmiMergeFilt(MergeBam.out, ".2.filtered")
 
@@ -506,14 +499,16 @@ workflow {
     RerunBWAmem(RerunConvertSamToFastq.out.final_out, "-t 10 -Y", ".3.consensus_mapped")
     SortConsensus(CallConsensus.out, ".3.unmapped")
     RerunSortConsensus(RerunBWAmem.out.final_out, ".3.mapped")
-    MergeBam2(RerunSortConsensus.out.final_out, SortConsensus.out, ".3.merged")
+
+    RerunSortConsensus.out.final_out.join(SortConsensus.out).set{bams_consensus}
+    MergeBam2(bams_consensus, ".3.merged")
 
     // 4. Variant Calling & Annotation
     VarDict(MergeBam2.out, ".4.vardict")
     AnnotationVEP(VarDict.out, ".4.vardict.vep")
 
     // Quality Controls
-    BedToIntervalList(sample_id, params.dict, params.bed, "")
+    BedToIntervalList(params.dict, params.bed, params.bed.tokenize('.')[0].tokenize('/')[-1])
     CollectHsMetrics(BWAmem.out, BedToIntervalList.out, ".QC.HsMetrics.1")
     RerunCollectHsMetrics(RerunBWAmem.out.final_out, BedToIntervalList.out, ".QC.HsMetrics.3")
     BCFtools_stats(AnnotationVEP.out, ".QC.bcftools_stats")
