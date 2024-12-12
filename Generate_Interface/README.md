@@ -7,12 +7,8 @@
 
 1. Download the python files
 2. Install the required dependencies
-3. Execute janitor_MobiCT.py
-```
-python janitor_MobiCT.py -i /path/to/MobiCT/output/files/ -o /path/to/the/output/directory/ 
-```
-4. Download and unzip the *ressources* file (the **ressources** directory must be in the **/path/to/the/output/directory/**)
-5. Execute generate_interface_MobiCT.py
+3. Download and unzip the *ressources* file (the **ressources** directory must be in the **/path/to/the/output/directory/**)
+4. Execute generate_interface_MobiCT.py
 ```
 python generate_interface_MobiCT.py -v /path/to/the/output/directory/variants/ -s /path/to/the/output/directory/stats/ -o /path/to/the/output/directory/report/
 ```
