@@ -1,5 +1,4 @@
 **In this folder there is:**
-- a python file (janitor_MobiCT.py) used to organize the output files of MobiCT and remove the intermediary files and clean the *workdir*
 - a python file (generate_interface_MobiCT.py) used to generate an html interface using the outputs of MobiCT
 - a compressed *ressources* folder (ressources.zip) used for the html outputs
 
