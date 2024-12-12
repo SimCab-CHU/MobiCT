@@ -1,4 +1,4 @@
-**In this folder there is:**
+**In this folder there are:**
 - a python file (generate_interface_MobiCT.py) used to generate an html interface using the outputs of MobiCT
 - a compressed *ressources* folder (ressources.zip) used for the html outputs
 - a *run_template.html* file to summarize the samples
