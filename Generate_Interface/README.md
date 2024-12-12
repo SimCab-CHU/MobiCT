@@ -1,10 +1,13 @@
 **In this folder there is:**
 - a python file (generate_interface_MobiCT.py) used to generate an html interface using the outputs of MobiCT
 - a compressed *ressources* folder (ressources.zip) used for the html outputs
+- a *run_template.html* file to summarize the samples
+- a csv table used to compute the LoD
+- a whitelist example to be used for variant filtering and annotation
 
 # Quick Start
 
-1. Download the python files
+1. Download the files
 2. Install the required dependencies
 3. Download and unzip the *ressources* file (the **ressources** directory must be in the directory above the **/output/path/** of the *generate_report_MobiCT.py* function)
 4. Execute generate_interface_MobiCT.py
