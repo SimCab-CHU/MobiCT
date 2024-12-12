@@ -9,6 +9,8 @@ import os
 import codecs
 import argparse
 import subprocess
+import warnings
+warnings.filterwarnings("ignore", category=FutureWarning)
 
 def whiteAnnot(p1l,gene,path):
     if p1l == "":
@@ -441,8 +443,7 @@ def getTemplate():
 #                       MAIN                          #
 #######################################################
 parser = argparse.ArgumentParser(description='This function is used to create a Adivar-like report for Twist cfDNA runs')
-parser.add_argument('-v', '--variants', type=str, help='path to the directory containing the vcf files')
-parser.add_argument('-s', '--stats', type=str, help='path to to the directory containing the metrics')
+parser.add_argument('-i', '--input', type=str, help='path to the directory containing the output of MobiCT')
 parser.add_argument('-k', '--kpath', type=str, help='path to to the cov_vaf_probs csv file')
 parser.add_argument('-w', '--whitelist', type=str, help='path to to the whitelist txt file')
 parser.add_argument('-b', '--bed', type=str, help='path to to the bedfile')
@@ -455,21 +456,18 @@ whitelist_file = args.whitelist
 
 to_keep = pd.read_csv(args.bed,sep="\t",header=None)
 to_keep = np.unique(to_keep[3]).tolist()
-print(to_keep)
 kept_csq = ['TFBS_ablation', 'TFBS_amplification', 'TF_binding_site_variant', 'regulatory_region_ablation', 'regulatory_region_amplification', 'transcript_ablation', 'splice_acceptor_variant', 'splice_donor_variant', 'stop_gained', 'frameshift_variant', 'stop_lost', 'start_lost', 'transcript_amplification', 'inframe_insertion', 'inframe_deletion', 'missense_variant', 'protein_altering_variant', 'splice_region_variant']
 
 k3 = pd.read_csv(k_path, sep="\t")
 command = "mkdir -p "+args.output
 subprocess.run(command, shell=True)
 
-
-path = args.variants
-samples=[]
-for i in os.listdir(path):
-    if i.endswith(".vcf"):
-        samples.append(i.split("_vep.vcf")[0])
-
-samples = np.unique(samples)
+path = args.input
+samples = os.listdir(path)
+samples = np.array(samples)[[not "multiQC" in i for i in samples]]
+samples = np.array(samples)[[not "interval_list" in i for i in samples]]
+samples = np.array(samples)[[not "reports" in i for i in samples]]
+#samples = [x.split("_S")[0] for x in samples]
 
 x="""                  <tr class="##color##" style="height:40px">
                     <td class="" style="">##sample_name##</td>
@@ -493,14 +491,14 @@ x="""                  <tr class="##color##" style="height:40px">
                   </tr>"""
 
 for sample_name in samples:
-    print("Doing " + sample_name + ":")
+    print(sample_name, end="", flush=True)
 
     # Set the output report
     output_report = args.output+"/"+sample_name+".html"
 
     # Gather statistics on the sample
-    picard = pd.read_csv(args.stats+"/"+sample_name+"_output_hs_metrics1.txt",sep='\t',engine='python',skiprows=lambda x: x not in [6,7])
-    metrics = pd.read_csv(args.stats+"/"+sample_name+"_reportAfter/multiqc_data/multiqc_picard_HsMetrics.txt",sep="\t")
+    picard = pd.read_csv(args.input+"/"+sample_name+"/"+sample_name+".QC.HsMetrics.1.txt",sep='\t',engine='python',skiprows=lambda x: x not in [6,7])
+    metrics = pd.read_csv(args.input+"/"+sample_name+"/"+sample_name+".QC.HsMetrics.3.txt",sep='\t',engine='python',skiprows=lambda x: x not in [6,7])
 
     m = round(metrics['MIN_TARGET_COVERAGE'][0])
     M = round(metrics['MAX_TARGET_COVERAGE'][0])
@@ -513,8 +511,8 @@ for sample_name in samples:
         LoD = min(k3.loc[[i<ave for i in k3['p99']]]['vaf'])
 
     # Get variants annotated with vep
-    subprocess.run("grep -v \"^##\" "+args.variants+"/"+sample_name+"_vep.vcf > "+args.variants+"/"+sample_name+".tsv", shell=True, check=True)
-    variant_data = pd.read_csv(args.variants+"/"+sample_name+".tsv",sep="\t")
+    subprocess.run("grep -v \"^##\" "+args.input+"/"+sample_name+"/"+sample_name+".4.vardict.vep.vcf > "+args.input+"/"+sample_name+"/"+sample_name+".tsv", shell=True, check=True)
+    variant_data = pd.read_csv(args.input+"/"+sample_name+"/"+sample_name+".tsv",sep="\t")
 
     # Build output report
     html = getTemplate()
@@ -650,7 +648,7 @@ for sample_name in samples:
     with open(output_report, "w") as FH_out:
         FH_out.write(html)
 
-
+    print('\x1b[0;32;40m' + " ✓" + '\x1b[0m')
 # create run.html -----------------
 
 run = args.template
