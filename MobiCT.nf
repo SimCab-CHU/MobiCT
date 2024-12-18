@@ -4,8 +4,6 @@
 process ConvertFastqToSam {
     tag "$sample_id"
 
-    publishDir "${params.outdir}/${sample_id}", mode: 'copy', overwrite: true
-
     input:
         tuple val('sample_id'), path(fastq)
         val extension
@@ -30,8 +28,6 @@ process ConvertFastqToSam {
 process ExtractUmis {
     tag "$sample_id"
 
-    publishDir "${params.outdir}/${sample_id}", mode: 'copy', overwrite: true
-
     input:
         tuple val(sample_id), path(bam_file)
         val extension
@@ -52,8 +48,6 @@ process ExtractUmis {
 // Convert the BAM file with UMI extracted reads to a FASTQ file
 process ConvertSamToFastq {
     tag "$sample_id"
-
-    publishDir "${params.outdir}/${sample_id}", mode: 'copy', overwrite: true
 
     input:
         tuple val(sample_id), path(bam_file)
@@ -77,7 +71,7 @@ process ConvertSamToFastq {
 process Fastp {
     tag "$sample_id"
 
-    publishDir "${params.outdir}/${sample_id}", mode: 'copy', overwrite: true
+    publishDir "${params.outdir}/${sample_id}", mode: 'copy', overwrite: true, pattern: '*.{json,html}'
 
     input:
         tuple val(sample_id), path(fastq)
@@ -96,8 +90,8 @@ process Fastp {
         -I ${fastq[1]} \
         -O ${sample_id}${extension}.R2.fq \
         -g -W 5 -q 20 -u 40 -x -3 -l 75 -c \
-        -j ${sample_id}${extension}_fastp.json \
-        -h ${sample_id}${extension}_fastp.html \
+        -j ${sample_id}.QC.fastp.json \
+        -h ${sample_id}.QC.fastp.html \
         -w 12
     """
 }
@@ -106,9 +100,8 @@ process Fastp {
 // the reference genome
 process BWAmem {
     tag "$sample_id"
+    clusterOptions '-n 10'
     
-    publishDir "${params.outdir}/${sample_id}", mode: 'copy', overwrite: true
-
     input:
         tuple val(sample_id), path(fastq)
         val opt_bwa
@@ -134,8 +127,6 @@ process BWAmem {
 process MergeBam {
     tag "$sample_id"
     
-    publishDir "${params.outdir}/${sample_id}", mode: 'copy', overwrite: true
-
     input:
         tuple val(sample_id), path(bam_aligned), path(bam_unmapped)
         val extension
@@ -167,8 +158,6 @@ process MergeBam {
 process UmiMergeFilt {
     tag "$sample_id"
 
-    publishDir "${params.outdir}/${sample_id}", mode: 'copy', overwrite: true
-
     input:
         tuple val(sample_id), path(bam)
         val extension
@@ -189,7 +178,7 @@ process UmiMergeFilt {
 process GroupReads {
     tag "$sample_id"
 
-    publishDir "${params.outdir}/${sample_id}", mode: 'copy', overwrite: true
+    publishDir "${params.outdir}/${sample_id}", mode: 'copy', overwrite: true, pattern: '*.txt'
 
     input:
         tuple val(sample_id), path(bam)
@@ -206,7 +195,7 @@ process GroupReads {
         --strategy=adjacency \
         --edits=1 \
         -t RX \
-        -f ${sample_id}.family_size_counts.txt
+        -f ${sample_id}.QC.family_size_counts.txt
     """
 }
 
@@ -216,8 +205,6 @@ process GroupReads {
 // to 1, in so doing the single read will be considered the consensus.
 process CallConsensus {
     tag "$sample_id"
-
-    publishDir "${params.outdir}/${sample_id}", mode: 'copy', overwrite: true
 
     input:
         tuple val(sample_id), path(bam)
@@ -263,8 +250,6 @@ workflow RerunBWAmem {
 // Sort the consensus_mapped.bam with the consensus_unmapped.bam to prepare them as input for the next step
 process SortConsensus {
     tag "$sample_id"
-
-    publishDir "${params.outdir}/${sample_id}", mode: 'copy', overwrite: true
 
     input:
         tuple val(sample_id), path(bam)
@@ -329,8 +314,6 @@ process MergeBam2 {
 process VarDict {
     tag "$sample_id"
     
-    publishDir "${params.outdir}/${sample_id}", mode: 'copy', overwrite: true
-
     input:
         tuple val(sample_id), path(bami)
         val extension
@@ -386,7 +369,6 @@ process AnnotationVEP {
 }
 
 process BedToIntervalList {
-    publishDir "${params.outdir}", mode: 'copy', overwrite: true
 
     input:
         path dict
@@ -512,6 +494,6 @@ workflow {
     BedToIntervalList(params.dict, params.bed, params.bed.tokenize('.')[0].tokenize('/')[-1])
     CollectHsMetrics(BWAmem.out, BedToIntervalList.out, ".QC.HsMetrics.1")
     RerunCollectHsMetrics(RerunBWAmem.out.final_out, BedToIntervalList.out, ".QC.HsMetrics.3")
-    BCFtools_stats(AnnotationVEP.out, ".QC.bcftools_stats")
+    BCFtools_stats(VarDict.out, ".QC.bcftools_stats")
     MultiQC(BCFtools_stats.out, ".QC.multiQC")
 }
