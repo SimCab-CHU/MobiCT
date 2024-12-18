@@ -30,6 +30,8 @@ process ExtractUmis {
 
     input:
         tuple val(sample_id), path(bam_file)
+        val struct_r1
+        val struct_r2
         val extension
 
     output:
@@ -39,7 +41,7 @@ process ExtractUmis {
     fgbio ExtractUmisFromBam \
         -i ${bam_file} \
         -o ${sample_id}${extension}.bam \
-        -r 5M2S+T 5M2S+T \
+        -r ${struct_r1} ${struct_r2} \
         -t RX \
         -a true
     """
@@ -71,14 +73,16 @@ process ConvertSamToFastq {
 process Fastp {
     tag "$sample_id"
 
+    publishDir "${params.outdir}/${sample_id}", mode: 'copy', overwrite: true, pattern: '*.{json,html}'
+
     input:
         tuple val(sample_id), path(fastq)
         val extension
 
     output:
         tuple val(sample_id), file("${sample_id}${extension}.R[1,2].fq")
-        file "${sample_id}${extension}_fastp.json"
-        file "${sample_id}${extension}_fastp.html"
+        file "${sample_id}.QC.fastp.json"
+        file "${sample_id}.QC.fastp.html"
 
     script:
     """
@@ -88,8 +92,8 @@ process Fastp {
         -I ${fastq[1]} \
         -O ${sample_id}${extension}.R2.fq \
         -g -W 5 -q 20 -u 40 -x -3 -l 75 -c \
-        -j ${sample_id}${extension}_fastp.json \
-        -h ${sample_id}${extension}_fastp.html \
+        -j ${sample_id}.QC.fastp.json \
+        -h ${sample_id}.QC.fastp.html \
         -w 12
     """
 }
@@ -98,6 +102,7 @@ process Fastp {
 // the reference genome
 process BWAmem {
     tag "$sample_id"
+    clusterOptions '-n 10'
     
     input:
         tuple val(sample_id), path(fastq)
@@ -124,8 +129,6 @@ process BWAmem {
 process MergeBam {
     tag "$sample_id"
     
-    publishDir "${params.outdir}/${sample_id}", mode: 'copy', overwrite: true
-
     input:
         tuple val(sample_id), path(bam_aligned), path(bam_unmapped)
         val extension
@@ -177,13 +180,15 @@ process UmiMergeFilt {
 process GroupReads {
     tag "$sample_id"
 
+    publishDir "${params.outdir}/${sample_id}", mode: 'copy', overwrite: true, pattern: '*.txt'
+
     input:
         tuple val(sample_id), path(bam)
         val extension
 
     output:
         tuple val(sample_id), file("${sample_id}${extension}.bam"), emit: nextout
-        file "${sample_id}.family_size_counts.txt"
+        file "${sample_id}.QC.family_size_counts.txt"
 
     """
     fgbio GroupReadsByUmi \
@@ -192,7 +197,7 @@ process GroupReads {
         --strategy=adjacency \
         --edits=1 \
         -t RX \
-        -f ${sample_id}.family_size_counts.txt
+        -f ${sample_id}.QC.family_size_counts.txt
     """
 }
 
@@ -454,6 +459,21 @@ process MultiQC {
     """
 }
 
+process MultiQC_ALL {
+    publishDir "${params.outdir}", mode: 'copy', overwrite: true
+
+    input:
+        tuple val(sample_id), path(file)
+        val extension
+
+    output:
+        file("${extension}_All")
+
+    """
+    multiqc ${params.outdir} -o ${extension}_All
+    """
+}
+
 workflow {
     Channel.fromFilePairs(params.fastq, checkIfExists:true)
         .filter{ v -> v=~ params.filter_fastq}
@@ -461,12 +481,13 @@ workflow {
 
     // 1. Preprocess deduplication
     ConvertFastqToSam(read_pairs_fastq, ".1.unmapped")
-    ExtractUmis(ConvertFastqToSam.out, ".1.umi_extracted")
+    ExtractUmis(ConvertFastqToSam.out, params.struct_r1, params.struct_r2, ".1.umi_extracted")
     ConvertSamToFastq(ExtractUmis.out, ".1.umi_extracted")
     Fastp(ConvertSamToFastq.out, ".1.umi_extracted.trimmed")
     BWAmem(Fastp.out[0], "-t 10", ".1.umi_extracted.aligned")
+
     BWAmem.out.join(ExtractUmis.out).set{bams_umis}
-    MergeBam(BWAmem.out, ExtractUmis.out, ".1.merged")
+    MergeBam(bams_umis, ".1.merged")
     UmiMergeFilt(MergeBam.out, ".1.filtered")
 
     // 2. Process deduplication
@@ -490,6 +511,13 @@ workflow {
     BedToIntervalList(params.dict, params.bed, params.bed.tokenize('.')[0].tokenize('/')[-1])
     CollectHsMetrics(BWAmem.out, BedToIntervalList.out, ".QC.HsMetrics.1")
     RerunCollectHsMetrics(RerunBWAmem.out.final_out, BedToIntervalList.out, ".QC.HsMetrics.3")
-    BCFtools_stats(AnnotationVEP.out, ".QC.bcftools_stats")
+    BCFtools_stats(VarDict.out, ".QC.bcftools_stats")
     MultiQC(BCFtools_stats.out, ".QC.multiQC")
+
+    Channel.empty()
+        .mix( MultiQC.out )
+        .map { sample, files -> files }
+        .collect()
+        .set { log_files }
+    MultiQC_ALL(log_files, "all.QC.multiQC")
 }
