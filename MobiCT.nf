@@ -4,8 +4,6 @@
 process ConvertFastqToSam {
     tag "$sample_id"
 
-    publishDir "${params.outdir}/${sample_id}", mode: 'copy', overwrite: true
-
     input:
         tuple val('sample_id'), path(fastq)
         val extension
@@ -30,8 +28,6 @@ process ConvertFastqToSam {
 process ExtractUmis {
     tag "$sample_id"
 
-    publishDir "${params.outdir}/${sample_id}", mode: 'copy', overwrite: true
-
     input:
         tuple val(sample_id), path(bam_file)
         val extension
@@ -52,8 +48,6 @@ process ExtractUmis {
 // Convert the BAM file with UMI extracted reads to a FASTQ file
 process ConvertSamToFastq {
     tag "$sample_id"
-
-    publishDir "${params.outdir}/${sample_id}", mode: 'copy', overwrite: true
 
     input:
         tuple val(sample_id), path(bam_file)
@@ -76,8 +70,6 @@ process ConvertSamToFastq {
 // Adapter and quality trimming
 process Fastp {
     tag "$sample_id"
-
-    publishDir "${params.outdir}/${sample_id}", mode: 'copy', overwrite: true
 
     input:
         tuple val(sample_id), path(fastq)
@@ -107,8 +99,6 @@ process Fastp {
 process BWAmem {
     tag "$sample_id"
     
-    publishDir "${params.outdir}/${sample_id}", mode: 'copy', overwrite: true
-
     input:
         tuple val(sample_id), path(fastq)
         val opt_bwa
@@ -167,8 +157,6 @@ process MergeBam {
 process UmiMergeFilt {
     tag "$sample_id"
 
-    publishDir "${params.outdir}/${sample_id}", mode: 'copy', overwrite: true
-
     input:
         tuple val(sample_id), path(bam)
         val extension
@@ -188,8 +176,6 @@ process UmiMergeFilt {
 // The user can control how many errors/mismatches are allowed in the UMI sequence when assigning source molecules (--edits=n).
 process GroupReads {
     tag "$sample_id"
-
-    publishDir "${params.outdir}/${sample_id}", mode: 'copy', overwrite: true
 
     input:
         tuple val(sample_id), path(bam)
@@ -216,8 +202,6 @@ process GroupReads {
 // to 1, in so doing the single read will be considered the consensus.
 process CallConsensus {
     tag "$sample_id"
-
-    publishDir "${params.outdir}/${sample_id}", mode: 'copy', overwrite: true
 
     input:
         tuple val(sample_id), path(bam)
@@ -263,8 +247,6 @@ workflow RerunBWAmem {
 // Sort the consensus_mapped.bam with the consensus_unmapped.bam to prepare them as input for the next step
 process SortConsensus {
     tag "$sample_id"
-
-    publishDir "${params.outdir}/${sample_id}", mode: 'copy', overwrite: true
 
     input:
         tuple val(sample_id), path(bam)
@@ -329,8 +311,6 @@ process MergeBam2 {
 process VarDict {
     tag "$sample_id"
     
-    publishDir "${params.outdir}/${sample_id}", mode: 'copy', overwrite: true
-
     input:
         tuple val(sample_id), path(bami)
         val extension
@@ -386,7 +366,6 @@ process AnnotationVEP {
 }
 
 process BedToIntervalList {
-    publishDir "${params.outdir}", mode: 'copy', overwrite: true
 
     input:
         path dict
@@ -488,7 +467,7 @@ workflow {
     BWAmem(Fastp.out[0], "-t 10", ".1.umi_extracted.aligned")
     BWAmem.out.join(ExtractUmis.out).set{bams_umis}
     MergeBam(BWAmem.out, ExtractUmis.out, ".1.merged")
-    UmiMergeFilt(MergeBam.out, ".2.filtered")
+    UmiMergeFilt(MergeBam.out, ".1.filtered")
 
     // 2. Process deduplication
     GroupReads(UmiMergeFilt.out, ".2.umi_grouped")
