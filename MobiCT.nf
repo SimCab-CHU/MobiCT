@@ -457,6 +457,21 @@ process MultiQC {
     """
 }
 
+process MultiQC_ALL {
+    publishDir "${params.outdir}", mode: 'copy', overwrite: true
+
+    input:
+        tuple val(sample_id), path(file)
+        val extension
+
+    output:
+        file("${extension}_All")
+
+    """
+    multiqc ${params.outdir} -o ${extension}_All
+    """
+}
+
 workflow {
     Channel.fromFilePairs(params.fastq, checkIfExists:true)
         .filter{ v -> v=~ params.filter_fastq}
@@ -496,4 +511,11 @@ workflow {
     RerunCollectHsMetrics(RerunBWAmem.out.final_out, BedToIntervalList.out, ".QC.HsMetrics.3")
     BCFtools_stats(VarDict.out, ".QC.bcftools_stats")
     MultiQC(BCFtools_stats.out, ".QC.multiQC")
+
+    Channel.empty()
+        .mix( MultiQC.out )
+        .map { sample, files -> files }
+        .collect()
+        .set { log_files }
+    MultiQC_ALL(log_files, "all.QC.multiQC")
 }
