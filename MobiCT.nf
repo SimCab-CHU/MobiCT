@@ -314,7 +314,6 @@ process MergeBam2 {
 process VarDict {
     tag "$sample_id"
     
-    
     input:
         tuple val(sample_id), path(bami)
         val extension
@@ -469,8 +468,9 @@ workflow {
     ConvertSamToFastq(ExtractUmis.out, ".1.umi_extracted")
     Fastp(ConvertSamToFastq.out, ".1.umi_extracted.trimmed")
     BWAmem(Fastp.out[0], "-t 10", ".1.umi_extracted.aligned")
+
     BWAmem.out.join(ExtractUmis.out).set{bams_umis}
-    MergeBam(BWAmem.out, ExtractUmis.out, ".1.merged")
+    MergeBam(bams_umis, ".1.merged")
     UmiMergeFilt(MergeBam.out, ".1.filtered")
 
     // 2. Process deduplication
