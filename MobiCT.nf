@@ -468,12 +468,11 @@ workflow {
     ConvertSamToFastq(ExtractUmis.out, ".1.umi_extracted")
     Fastp(ConvertSamToFastq.out, ".1.umi_extracted.trimmed")
     BWAmem(Fastp.out[0], "-t 10", ".1.umi_extracted.aligned")
-
     BWAmem.out.join(ExtractUmis.out).set{bams_umis}
-    MergeBam(bams_umis, ".1.merged")
+    MergeBam(BWAmem.out, ExtractUmis.out, ".1.merged")
+    UmiMergeFilt(MergeBam.out, ".2.filtered")
 
     // 2. Process deduplication
-    UmiMergeFilt(MergeBam.out, ".2.filtered")
     GroupReads(UmiMergeFilt.out, ".2.umi_grouped")
     CallConsensus(GroupReads.out.nextout, ".2.consensus_unmapped")
 
