@@ -30,6 +30,8 @@ process ExtractUmis {
 
     input:
         tuple val(sample_id), path(bam_file)
+        val struct_r1
+        val struct_r2
         val extension
 
     output:
@@ -39,7 +41,7 @@ process ExtractUmis {
     fgbio ExtractUmisFromBam \
         -i ${bam_file} \
         -o ${sample_id}${extension}.bam \
-        -r 5M2S+T 5M2S+T \
+        -r ${struct_r1} ${struct_r2} \
         -t RX \
         -a true
     """
@@ -479,7 +481,7 @@ workflow {
 
     // 1. Preprocess deduplication
     ConvertFastqToSam(read_pairs_fastq, ".1.unmapped")
-    ExtractUmis(ConvertFastqToSam.out, ".1.umi_extracted")
+    ExtractUmis(ConvertFastqToSam.out, params.struct_r1, params.struct_r2, ".1.umi_extracted")
     ConvertSamToFastq(ExtractUmis.out, ".1.umi_extracted")
     Fastp(ConvertSamToFastq.out, ".1.umi_extracted.trimmed")
     BWAmem(Fastp.out[0], "-t 10", ".1.umi_extracted.aligned")
