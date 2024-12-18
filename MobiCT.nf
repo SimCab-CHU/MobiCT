@@ -314,6 +314,7 @@ process MergeBam2 {
 process VarDict {
     tag "$sample_id"
     
+    
     input:
         tuple val(sample_id), path(bami)
         val extension
@@ -470,7 +471,7 @@ workflow {
     BWAmem(Fastp.out[0], "-t 10", ".1.umi_extracted.aligned")
     BWAmem.out.join(ExtractUmis.out).set{bams_umis}
     MergeBam(BWAmem.out, ExtractUmis.out, ".1.merged")
-    UmiMergeFilt(MergeBam.out, ".2.filtered")
+    UmiMergeFilt(MergeBam.out, ".1.filtered")
 
     // 2. Process deduplication
     GroupReads(UmiMergeFilt.out, ".2.umi_grouped")
