@@ -81,8 +81,8 @@ process Fastp {
 
     output:
         tuple val(sample_id), file("${sample_id}${extension}.R[1,2].fq")
-        file "${sample_id}${extension}_fastp.json"
-        file "${sample_id}${extension}_fastp.html"
+        file "${sample_id}.QC.fastp.json"
+        file "${sample_id}.QC.fastp.html"
 
     script:
     """
@@ -188,7 +188,7 @@ process GroupReads {
 
     output:
         tuple val(sample_id), file("${sample_id}${extension}.bam"), emit: nextout
-        file "${sample_id}.family_size_counts.txt"
+        file "${sample_id}.QC.family_size_counts.txt"
 
     """
     fgbio GroupReadsByUmi \
