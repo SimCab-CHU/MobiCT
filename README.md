@@ -9,14 +9,14 @@ The pipeline is built using Nextflow.
 
 1. Install nextflow (https://www.nextflow.io/docs/latest/install.html).
 2. Create a conda environment for MobiCT:
-3. 
+
     `conda create -n myenv -c conda-forge -c bioconda gatk4 fgbio bwa fastp samtools picard vardict ensembl-vep`
 4. Download the reference genome
 5. Download the datasets needed by VEP (see https://github.com/Ensembl/ensembl-vep)
 6. Edit the *.config* file with input and output files/paths
 7. Activate your conda environment
 8. Run MobiCT on your Dataset
-9. 
+
     `Nextflow -log /output_directory/my.log run MobiCT.nf -c nextflow.config`
 
 # Pipeline output
