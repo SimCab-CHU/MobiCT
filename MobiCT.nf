@@ -470,7 +470,7 @@ process MultiQC_ALL {
         file("${extension}_All")
 
     """
-    multiqc ${params.outdir} -o ${extension}_All
+    multiqc ${params.outdir} -o ${extension}
     """
 }
 
