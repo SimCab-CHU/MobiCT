@@ -7,7 +7,7 @@ The pipeline is built using Nextflow.
 The associated publication is available here: /doi/.../
 
 
-![figure1](https://github.com/user-attachments/assets/f44e5d99-4a85-423e-bf13-17ee13b5420c)
+<img src="https://github.com/user-attachments/assets/f44e5d99-4a85-423e-bf13-17ee13b5420c" width= 30% height=30%>
 
 
 
