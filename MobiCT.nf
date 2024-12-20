@@ -29,7 +29,7 @@ include { AnnotationVEP } from "./includes/vep.nf"
 include { BCFtools_stats } from "./includes/bcftools.nf"
 
 include { MultiQC } from "./includes/multiqc.nf"
-include { MultiQC_ALL } from "./includes/multiqc.nf"
+include { MultiQC as MultiQC_ALL } from "./includes/multiqc.nf"
 
 workflow {
     Channel.fromFilePairs(params.fastq, checkIfExists:true)
@@ -69,12 +69,14 @@ workflow {
     CollectHsMetrics(BWAmem.out, BedToIntervalList.out, ".QC.HsMetrics.1")
     RerunCollectHsMetrics(RerunBWAmem.out, BedToIntervalList.out, ".QC.HsMetrics.3")
     BCFtools_stats(VarDict.out, ".QC.bcftools_stats")
-    MultiQC(BCFtools_stats.out, ".QC.multiQC")
 
-    Channel.empty()
-        .mix( BCFtools_stats.out )
-        .map { sample, files -> files }
-        .collect()
-        .set { log_files }
-    MultiQC_ALL(log_files, "all.QC.multiQC")
+    BCFtools_stats.out\
+        .map{ it -> [it[0], "$params.outdir/${it[0]}"]}\
+        .groupTuple()\
+        .set{ multiqc_tuples }
+
+    MultiQC(multiqc_tuples, ".QC.multiQC")
+
+    MultiQC.out.map{ it -> ["all", params.outdir]}.first().set{ all_qc }    
+    MultiQC_ALL(all_qc, ".QC.multiQC")
 }

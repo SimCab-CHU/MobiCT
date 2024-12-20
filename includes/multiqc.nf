@@ -1,34 +1,18 @@
 
-// Generate a multi-quality control report from collected metrics data (process
-// collectmetrics2 output).
+// Generate a multi-quality control report from collected metrics data 
 process MultiQC {
     tag "${sample_id}"
     
     publishDir "${params.outdir}/${sample_id}", mode: 'copy', overwrite: true
 
     input:
-        tuple val(sample_id), path(file)
+        tuple val(sample_id), path(dir)
         val extension
 
     output:
         file("${sample_id}${extension}")
 
     """
-    multiqc ${params.outdir}/${sample_id} -o ${sample_id}${extension}
-    """
-}
-
-process MultiQC_ALL {
-    publishDir "${params.outdir}", mode: 'copy', overwrite: true
-
-    input:
-        tuple val(sample_id), path(file)
-        val extension
-
-    output:
-        file("${extension}")
-
-    """
-    multiqc ${params.outdir} -o ${extension}
+    multiqc ${dir} -o ${sample_id}${extension} 
     """
 }
