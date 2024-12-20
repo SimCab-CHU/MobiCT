@@ -20,6 +20,7 @@ copyright = 'Copyright (C) 2024'
 license = 'GNU General Public License'
 version = '1.0.0'
 email = 's-cabelloaguilar@chu-montpellier.fr'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
 // PROCESSES
