@@ -47,9 +47,6 @@ process ConvertFastqToSam {
 }
 
 // Extraction of UMIs from the insert reads
-// It is the parameter "-r" that define the number of intial bases to extract
-// for UMIs. in this pipeline we extract the initial 3 bases for UMIs
-// Example : 5M2S+T 5M2S+T (in case of Twist kit)
 process ExtractUmis {
     tag "$sample_id"
 
