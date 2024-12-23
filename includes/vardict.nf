@@ -2,7 +2,7 @@
 // Variant calling step using vardict
 process VarDict {
     tag "$sample_id"
-    
+
     input:
         tuple val(sample_id), path(bami)
         val extension
@@ -12,6 +12,7 @@ process VarDict {
 
     """
     vardict-java \
+        -th ${task.cpus} \
         -G ${params.ref} \
         -f 0.0005 \
         -N ${sample_id} \
@@ -20,7 +21,7 @@ process VarDict {
         -S 2 \
         -E 3 \
         -g 4 ${params.bed} \
-        | $params.teststrandbias \
-        | $params.var2vcf > ${sample_id}${extension}.vcf
+        | teststrandbias.R \
+        | var2vcf_valid.pl > ${sample_id}${extension}.vcf
     """
 }

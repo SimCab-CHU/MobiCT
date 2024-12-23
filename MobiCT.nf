@@ -41,7 +41,7 @@ workflow {
     ExtractUmis(ConvertFastqToSam.out, params.struct_r1, params.struct_r2, ".1.umi_extracted")
     ConvertSamToFastq(ExtractUmis.out, ".1.umi_extracted")
     Fastp(ConvertSamToFastq.out, ".1.umi_extracted.trimmed")
-    BWAmem(Fastp.out[0], "-t 10", ".1.umi_extracted.aligned")
+    BWAmem(Fastp.out[0], ".1.umi_extracted.aligned")
 
     BWAmem.out.join(ExtractUmis.out).set{bams_umis}
     MergeBam(bams_umis, ".1.merged")
@@ -53,7 +53,7 @@ workflow {
 
     // 3. Post process deduplication
     RerunConvertSamToFastq(CallConsensus.out, ".3.unmapped")
-    RerunBWAmem(RerunConvertSamToFastq.out, "-t 10 -Y", ".3.consensus_mapped")
+    RerunBWAmem(RerunConvertSamToFastq.out, ".3.consensus_mapped")
     SortConsensus(CallConsensus.out, ".3.unmapped")
     RerunSortConsensus(RerunBWAmem.out, ".3.mapped")
 
@@ -77,6 +77,6 @@ workflow {
 
     MultiQC(multiqc_tuples, ".QC.multiQC")
 
-    MultiQC.out.map{ it -> ["all", params.outdir]}.first().set{ all_qc }    
+    MultiQC.out.map{ it -> ["all", params.outdir]}.first().set{ all_qc }
     MultiQC_ALL(all_qc, ".QC.multiQC")
 }

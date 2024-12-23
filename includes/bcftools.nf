@@ -1,7 +1,7 @@
 
 process BCFtools_stats {
     tag "${sample_id}"
-    
+
     publishDir "${params.outdir}/${sample_id}", mode: 'copy', overwrite: true
 
     input:
@@ -12,6 +12,6 @@ process BCFtools_stats {
         tuple val(sample_id), file("${sample_id}${extension}.stats")
 
     """
-    bcftools stats ${file} > ${sample_id}${extension}.stats
+    bcftools stats --threads ${task.cpus} ${file} > ${sample_id}${extension}.stats
     """
 }

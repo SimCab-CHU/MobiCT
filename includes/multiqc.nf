@@ -2,7 +2,7 @@
 // Generate a multi-quality control report from collected metrics data 
 process MultiQC {
     tag "${sample_id}"
-    
+
     publishDir "${params.outdir}/${sample_id}", mode: 'copy', overwrite: true
 
     input:

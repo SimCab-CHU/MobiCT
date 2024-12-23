@@ -46,7 +46,7 @@ process ConvertSamToFastq {
 // 2: the alignment coordinate information: output of bwaMEM process
 process MergeBam {
     tag "$sample_id"
-    
+
     input:
         tuple val(sample_id), path(bam_aligned), path(bam_unmapped)
         val extension
@@ -99,7 +99,7 @@ process SortConsensus {
 // retain the UMI group information.
 process MergeBam2 {
     tag "$sample_id"
-    
+
     publishDir "${params.outdir}/${sample_id}", mode: 'copy', overwrite: true
 
     input:
@@ -136,7 +136,7 @@ process BedToIntervalList {
 
     output:
         file "${extension}.interval_list"
-    
+
     """
     picard BedToIntervalList \
         --SEQUENCE_DICTIONARY ${dict} \

@@ -67,6 +67,7 @@ process CallConsensus {
 
     """
     fgbio CallMolecularConsensusReads \
+        --threads ${task.cpus} \
         -i ${bam} \
         -o ${sample_id}${extension}.bam \
         --error-rate-post-umi 40 \

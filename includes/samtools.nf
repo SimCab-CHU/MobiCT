@@ -11,8 +11,9 @@ process UmiMergeFilt {
 
     """
     samtools view \
+        --threads ${task.cpus -1} \
         -f2 \
         -bh ${bam} \
-        > ${sample_id}${extension}.bam
+        -o ${sample_id}${extension}.bam
     """
 }

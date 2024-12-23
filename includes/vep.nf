@@ -8,12 +8,13 @@ process AnnotationVEP {
     input:
         tuple val(sample_id), path(vcf)
         val extension
-    
+
     output:
          tuple val(sample_id), file("${sample_id}${extension}.vcf")
 
     """
     vep \
+        --fork ${task.cpus} \
         -i ${vcf} \
         -o ${sample_id}${extension}.vcf \
         --cache \
