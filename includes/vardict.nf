@@ -11,7 +11,7 @@ process VarDict {
         tuple val(sample_id), file("${sample_id}${extension}.vcf")
 
     """
-    vardict \
+    vardict-java \
         -G ${params.ref} \
         -f 0.0005 \
         -N ${sample_id} \

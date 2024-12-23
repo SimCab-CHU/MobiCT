@@ -11,7 +11,7 @@ The associated publication is available here:
 1. Install nextflow (https://www.nextflow.io/docs/latest/install.html).
 2. Create a conda environment for MobiCT:
 
-    `conda create -n myenv -c conda-forge -c bioconda gatk4 fgbio bwa fastp samtools picard vardict ensembl-vep`
+    `conda create -n MobiCT -c conda-forge -c bioconda gatk4 fgbio bwa fastp samtools picard vardict-java ensembl-vep`
 4. Download the reference genome
 5. Download the datasets needed by VEP (see https://github.com/Ensembl/ensembl-vep)
 6. Edit the *.config* file with input and output files/paths
