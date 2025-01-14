@@ -27,3 +27,6 @@ The associated publication is available here: /doi/.../
 
 # Pipeline output
 The output files are stored in the directory you specified using the **outdir** parameter in the .config file. The **outdir** contains a folder per sample plus a **multiQC** folder. Each sample folder contains a deduplicated and aligned *.bam* file and its index, an annotated *.vcf* file, 3 metrics files (*.HsMetrics.1.txt*, *.HsMetrics.3.txt* and *QC.bcftools_stats.stats*).
+
+# Data availability
+Raw sequencing data (FASTQ files) of commercial controls used in the study are available @ https://www.ncbi.nlm.nih.gov/sra/PRJNA1209006.
