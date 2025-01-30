@@ -489,7 +489,7 @@ process MultiQC_ALL {
         val extension
 
     output:
-        file("${extension}_All")
+        file("${extension}")
 
     """
     multiqc ${params.outdir} -o ${extension}
