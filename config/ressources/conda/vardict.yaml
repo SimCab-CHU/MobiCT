@@ -1,0 +1,7 @@
+name: gatk4
+channels:
+  - conda-forge
+  - bioconda
+
+dependencies:
+  - vardict=2018.10.18
