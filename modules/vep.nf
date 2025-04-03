@@ -14,6 +14,7 @@ process AnnotationVEP {
 
     """
     vep \
+        --fork ${task.cpus} \
         -i ${vcf} \
         -o ${sample_id}${extension}.vcf \
         --cache \

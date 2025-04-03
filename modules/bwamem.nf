@@ -14,6 +14,7 @@ process BWAmem {
 
     """
     bwa mem \
+        -t ${task.cpus} \
         ${opt_bwa} \
         -M ${params.ref} \
         ${fastq[0]} \

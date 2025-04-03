@@ -17,6 +17,7 @@ process Fastp {
     script:
     """
     fastp \
+        --thread ${task.cpus} \
         -i ${fastq[0]} \
         -o ${sample_id}${extension}.R1.fq \
         -I ${fastq[1]} \
