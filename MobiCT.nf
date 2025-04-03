@@ -23,6 +23,14 @@ email = 's-cabelloaguilar@chu-montpellier.fr'
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
+// Check profiles
+if (
+    workflow.profile.contains('singularity') ||
+    workflow.profile.contains('docker') ||
+    workflow.profile.contains('conda')
+  ) { "executer selected" }
+else { exit 1, "No executer selected, please use: -profile docker/singularity/conda (choose one of the 3 possibilities)"}
+
 // Include modules
 include {ConvertFastqToSam; MergeBam; MergeBam2; SortConsensus; SortConsensus as RerunSortConsensus; ConvertSamToFastq; ConvertSamToFastq as RerunConvertSamToFastq } from "$baseDir/modules/gatk.nf"
 include {BedToIntervalList; CollectHsMetrics; CollectHsMetrics as RerunCollectHsMetrics;} from "$baseDir/modules/picard.nf"
