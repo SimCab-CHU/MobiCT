@@ -27,6 +27,7 @@ process CollectHsMetrics {
     input:
         tuple val(sample_id), file(bam)
         file bed
+        path genomeref
         val extension
 
     output:
@@ -34,7 +35,7 @@ process CollectHsMetrics {
 
     """
     picard CollectHsMetrics \
-        --REFERENCE_SEQUENCE ${params.ref} \
+        --REFERENCE_SEQUENCE ${genomeref} \
         --BAIT_INTERVALS ${bed} \
         --TARGET_INTERVALS ${bed} \
         --INPUT ${bam} \

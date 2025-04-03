@@ -5,6 +5,7 @@ process VarDict {
 
     input:
         tuple val(sample_id), path(bami)
+        path genomeref
         val extension
 
     output:
@@ -12,7 +13,7 @@ process VarDict {
 
     """
     vardict \
-        -G ${params.ref} \
+        -G ${genomeref} \
         -f 0.0005 \
         -N ${sample_id} \
         -b ${bami[1]} \

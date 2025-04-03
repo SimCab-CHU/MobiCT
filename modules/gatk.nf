@@ -52,6 +52,7 @@ process MergeBam {
 
     input:
         tuple val(sample_id), path(bam_aligned), path(bam_unmapped)
+        path genomeref
         val extension
 
 
@@ -66,7 +67,7 @@ process MergeBam {
         --ALIGNED_BAM ${bam_aligned} \
         --UNMAPPED_BAM ${bam_unmapped} \
         --OUTPUT ${sample_id}${extension}.bam \
-        --REFERENCE_SEQUENCE ${params.ref} \
+        --REFERENCE_SEQUENCE ${genomeref} \
         --SORT_ORDER 'queryname' \
         --ALIGNED_READS_ONLY true \
         --MAX_INSERTIONS_OR_DELETIONS -1 \
@@ -109,6 +110,7 @@ process MergeBam2 {
 
     input:
         tuple val(sample_id), path(bam_aligned), path(bam_unmapped)
+        path genomeref
         val extension
 
     output:
@@ -121,7 +123,7 @@ process MergeBam2 {
         --ALIGNED_BAM ${bam_aligned} \
         --UNMAPPED_BAM ${bam_unmapped} \
         --OUTPUT ${sample_id}${extension}.bam \
-        --REFERENCE_SEQUENCE ${params.ref} \
+        --REFERENCE_SEQUENCE ${genomeref} \
         --SORT_ORDER coordinate \
         --ADD_MATE_CIGAR true \
         --MAX_INSERTIONS_OR_DELETIONS -1 \

@@ -6,6 +6,7 @@ process BWAmem {
 
     input:
         tuple val(sample_id), path(fastq)
+        path genomeref
         val opt_bwa
         val extension
     
@@ -16,7 +17,7 @@ process BWAmem {
     bwa mem \
         -t ${task.cpus} \
         ${opt_bwa} \
-        -M ${params.ref} \
+        -M ${genomeref} \
         ${fastq[0]} \
         ${fastq[1]} \
         | \
