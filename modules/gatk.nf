@@ -16,7 +16,6 @@ process ConvertFastqToSam {
         --FASTQ2 ${fastq[1]} \
         --OUTPUT ${sample_id}${extension}.bam \
         --SAMPLE_NAME ${sample_id} \
-        --TMP_DIR ${params.tmp_dir}
     """
 }
 
@@ -53,6 +52,7 @@ process MergeBam {
     input:
         tuple val(sample_id), path(bam_aligned), path(bam_unmapped)
         path genomeref
+        path genome_dict
         val extension
 
 
@@ -111,6 +111,7 @@ process MergeBam2 {
     input:
         tuple val(sample_id), path(bam_aligned), path(bam_unmapped)
         path genomeref
+        path genome_dict
         val extension
 
     output:

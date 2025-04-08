@@ -33,13 +33,14 @@ else { exit 1, "No executer selected, please use: -profile docker/singularity/co
 
 // Include modules
 include {ConvertFastqToSam; MergeBam; MergeBam2; SortConsensus; SortConsensus as RerunSortConsensus; ConvertSamToFastq; ConvertSamToFastq as RerunConvertSamToFastq } from "$baseDir/modules/gatk.nf"
-include {BedToIntervalList; CollectHsMetrics; CollectHsMetrics as RerunCollectHsMetrics;} from "$baseDir/modules/picard.nf"
-include {BWAmem; BWAmem as RerunBWAmem;} from "$baseDir/modules/bwamem.nf"
+include {CreateSequenceDictionary; BedToIntervalList; CollectHsMetrics; CollectHsMetrics as RerunCollectHsMetrics;} from "$baseDir/modules/picard.nf"
+include {BwaIndex; BWAmem; BWAmem as RerunBWAmem;} from "$baseDir/modules/bwamem.nf"
 include {BCFtools_stats} from "$baseDir/modules/bcftools.nf"
 include {Fastp} from "$baseDir/modules/fastp.nf"
 include {ExtractUmis; GroupReads; CallConsensus; } from "$baseDir/modules/fgbio.nf"
-include {MultiQC; MultiQC_ALL; } from "$baseDir/modules/multiqc.nf"
-include {UmiMergeFilt} from "$baseDir/modules/samtools.nf"
+include {MultiQC; MultiQC as MultiQC_ALL; } from "$baseDir/modules/multiqc.nf"
+include {Faidx; UmiMergeFilt; Sam2bam; Sam2bam as ReSam2bam} from "$baseDir/modules/samtools.nf"
+include {DealWithRef} from "$baseDir/modules/pigz.nf"
 include {VarDict} from "$baseDir/modules/vardict.nf"
 include {AnnotationVEP} from "$baseDir/modules/vep.nf"
 
@@ -53,45 +54,56 @@ workflow {
             .ifEmpty { exit 1, "Cannot find genome matching ${params.ref}!\n" }
             .set{genomeref}
 
+
+    // htslib-based tools (e.g., samtools, bcftools) Require BGZF-compressed FASTA and  Use .fai index (samtools faidx)
+    DealWithRef(genomeref.collect())
+    DealWithRef.out.genomerefok.set{genomerefok}
+
+    Faidx(genomerefok).set{genome_fai}
+
+    // Create the genome index
+    BwaIndex(genomerefok)
+
+    // Picard/GATK can use gzipped compressed fasta but need a .dict file 
+    // Create the genome dictionary
+    CreateSequenceDictionary(genomerefok)
+        .set{genome_dict}
+
     // 1. Preprocess deduplication
     ConvertFastqToSam(read_pairs_fastq, ".1.unmapped")
     ExtractUmis(ConvertFastqToSam.out, params.struct_r1, params.struct_r2, ".1.umi_extracted")
     ConvertSamToFastq(ExtractUmis.out, ".1.umi_extracted")
     Fastp(ConvertSamToFastq.out, ".1.umi_extracted.trimmed")
-    BWAmem(Fastp.out[0], genomeref, "-t 10", ".1.umi_extracted.aligned")
+    BWAmem(Fastp.out[0], genomerefok, BwaIndex.out, "", ".1.umi_extracted.aligned")
+    Sam2bam(BWAmem.out.tuple_sample_sam)
 
-    BWAmem.out.join(ExtractUmis.out).set{bams_umis}
-    MergeBam(bams_umis, genomeref, ".1.merged")
+    Sam2bam.out.join(ExtractUmis.out).set{bams_umis}
+    MergeBam(bams_umis, genomerefok, genome_dict, ".1.merged")
     UmiMergeFilt(MergeBam.out, ".1.filtered")
 
     // 2. Process deduplication
     GroupReads(UmiMergeFilt.out, ".2.umi_grouped")
-    CallConsensus(GroupReads.out.nextout, ".2.consensus_unmapped")
+    CallConsensus(GroupReads.out.nextout, genome_fai, ".2.consensus_unmapped")
 
     // 3. Post process deduplication
     RerunConvertSamToFastq(CallConsensus.out, ".3.unmapped")
-    RerunBWAmem(RerunConvertSamToFastq.out, genomeref, "-t 10 -Y", ".3.consensus_mapped")
+    RerunBWAmem(RerunConvertSamToFastq.out, genomerefok, BwaIndex.out, " -Y", ".3.consensus_mapped")
     SortConsensus(CallConsensus.out, ".3.unmapped")
-    RerunSortConsensus(RerunBWAmem.out, ".3.mapped")
+    ReSam2bam(RerunBWAmem.out.tuple_sample_sam)
+    RerunSortConsensus(ReSam2bam.out, ".3.mapped")
 
     RerunSortConsensus.out.join(SortConsensus.out).set{bams_consensus}
-    MergeBam2(bams_consensus, genomeref, ".3.merged")
+    MergeBam2(bams_consensus, genomerefok, genome_dict, ".3.merged")
 
     // 4. Variant Calling & Annotation
-    VarDict(MergeBam2.out, genomeref, ".4.vardict")
-    AnnotationVEP(VarDict.out, ".4.vardict.vep")
+    VarDict(MergeBam2.out, genomerefok, genome_fai, params.bed,".4.vardict")
+    AnnotationVEP(VarDict.out, genomerefok, ".4.vardict.vep")
 
     // Quality Controls
-    BedToIntervalList(params.dict, params.bed, params.bed.tokenize('.')[0].tokenize('/')[-1])
-    CollectHsMetrics(BWAmem.out, BedToIntervalList.out, genomeref, ".QC.HsMetrics.1")
-    RerunCollectHsMetrics(RerunBWAmem.out, BedToIntervalList.out, genomeref, ".QC.HsMetrics.3")
+    BedToIntervalList(genome_dict, params.bed, params.bed.tokenize('.')[0].tokenize('/')[-1])
+    CollectHsMetrics(Sam2bam.out, BedToIntervalList.out, genomerefok, genome_fai, ".QC.HsMetrics.1")
+    RerunCollectHsMetrics(ReSam2bam.out, BedToIntervalList.out, genomerefok, genome_fai, ".QC.HsMetrics.3")
     BCFtools_stats(VarDict.out, ".QC.bcftools_stats")
     MultiQC(BCFtools_stats.out, ".QC.multiQC")
-
-    Channel.empty()
-        .mix( MultiQC.out )
-        .map { sample, files -> files }
-        .collect()
-        .set { log_files }
-    MultiQC_ALL(log_files, "all.QC.multiQC")
+    MultiQC_ALL(BCFtools_stats.out.collect(), "all.QC.multiQC")
 }

@@ -1,3 +1,17 @@
+process CreateSequenceDictionary {
+    label 'picard'
+
+    input:
+        path genome
+
+    output:
+        file "*.dict"
+    
+    """
+    picard CreateSequenceDictionary R=${genome} O=${genome}.dict
+    """
+}
+
 process BedToIntervalList {
     label 'picard'
 
@@ -28,6 +42,7 @@ process CollectHsMetrics {
         tuple val(sample_id), file(bam)
         file bed
         path genomeref
+        path genome_fai
         val extension
 
     output:
