@@ -22,6 +22,10 @@ MobiCT performs the following key steps:
 6. **Quality Metrics**: Comprehensive QC metrics generation
 7. **Reporting**: MultiQC report generation
 
+<img src="https://github.com/user-attachments/assets/f44e5d99-4a85-423e-bf13-17ee13b5420c" width= 30% height=30%>
+
+
+
 ## Quick Start
 
 1. Install [`Nextflow`](https://www.nextflow.io/docs/latest/install.html) (`>=20.04.0`)
