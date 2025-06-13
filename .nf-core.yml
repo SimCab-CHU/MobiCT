@@ -1,0 +1,103 @@
+bump_version: null
+lint:
+  files_exist:
+  - .github/ISSUE_TEMPLATE/bug_report.yml
+  - .github/ISSUE_TEMPLATE/feature_request.yml
+  - .github/PULL_REQUEST_TEMPLATE.md
+  - .github/CONTRIBUTING.md
+  - .github/.dockstore.yml
+  - .github/workflows/branch.yml
+  - .github/workflows/ci.yml
+  - .github/workflows/linting_comment.yml
+  - .github/workflows/linting.yml
+  - assets/email_template.html
+  - assets/sendmail_template.txt
+  - assets/email_template.txt
+  - .github/ISSUE_TEMPLATE/bug_report.yml
+  - .github/ISSUE_TEMPLATE/feature_request.yml
+  - .github/PULL_REQUEST_TEMPLATE.md
+  - .github/CONTRIBUTING.md
+  - .github/.dockstore.yml
+  - .github/workflows/branch.yml
+  - .github/workflows/ci.yml
+  - .github/workflows/linting_comment.yml
+  - .github/workflows/linting.yml
+  - assets/email_template.html
+  - assets/sendmail_template.txt
+  - assets/email_template.txt
+  - CODE_OF_CONDUCT.md
+  - assets/nf-core-mobict_logo_light.png
+  - docs/images/nf-core-mobict_logo_light.png
+  - docs/images/nf-core-mobict_logo_dark.png
+  - .github/ISSUE_TEMPLATE/config.yml
+  - .github/workflows/awstest.yml
+  - .github/workflows/awsfulltest.yml
+  files_unchanged:
+  - .github/ISSUE_TEMPLATE/bug_report.yml
+  - .github/ISSUE_TEMPLATE/config.yml
+  - .github/ISSUE_TEMPLATE/feature_request.yml
+  - .github/PULL_REQUEST_TEMPLATE.md
+  - .github/workflows/branch.yml
+  - .github/workflows/linting_comment.yml
+  - .github/workflows/linting.yml
+  - .github/CONTRIBUTING.md
+  - .github/.dockstore.yml
+  - .github/CONTRIBUTING.md
+  - .prettierignore
+  - .prettierignore
+  - .prettierignore
+  - .github/ISSUE_TEMPLATE/bug_report.yml
+  - .github/ISSUE_TEMPLATE/config.yml
+  - .github/ISSUE_TEMPLATE/feature_request.yml
+  - .github/PULL_REQUEST_TEMPLATE.md
+  - .github/workflows/branch.yml
+  - .github/workflows/linting_comment.yml
+  - .github/workflows/linting.yml
+  - .github/CONTRIBUTING.md
+  - .github/.dockstore.yml
+  - .github/CONTRIBUTING.md
+  - .prettierignore
+  - .prettierignore
+  - .prettierignore
+  - CODE_OF_CONDUCT.md
+  - assets/nf-core-mobict_logo_light.png
+  - docs/images/nf-core-mobict_logo_light.png
+  - docs/images/nf-core-mobict_logo_dark.png
+  - .github/ISSUE_TEMPLATE/bug_report.yml
+  multiqc_config:
+  - report_comment
+  nextflow_config:
+  - manifest.name
+  - manifest.homePage
+  - validation.help.beforeText
+  - validation.help.afterText
+  - validation.summary.beforeText
+  - validation.summary.afterText
+  readme:
+  - nextflow_badge
+  - nextflow_badge
+  - nextflow_badge
+nf_core_version: 3.0.2
+org_path: null
+repository_type: pipeline
+template:
+  author: Simon Cabello-Aguilar
+  description: ctDNA Analysis pipeline
+  force: true
+  is_nfcore: false
+  name: mobiCT
+  org: mobidic
+  outdir: .
+  skip_features:
+  - github
+  - ci
+  - github_badges
+  - gitpod
+  - codespaces
+  - fastqc
+  - email
+  - adaptivecard
+  - slackreport
+  - seqera_platform
+  version: 1.0.0dev
+update: null
