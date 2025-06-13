@@ -1,10 +1,15 @@
 # MobiCT
-ctDNA Analysis pipeline 
+ctDNA Analysis pipeline. Version 1.0.0
 
 # Introduction
 Mobict is an analysis pipeline designed for detecting SNV and small InDels in circulating tumor DNA (ctDNA) obtained through non-invasive liquid biopsy, serving diagnostic, prognostic, and therapeutic purposes.
 The pipeline is built using Nextflow.
-The associated publication is available here: 
+The associated publication is available here: /doi/.../
+
+
+<img src="https://github.com/user-attachments/assets/f44e5d99-4a85-423e-bf13-17ee13b5420c" width= 30% height=30%>
+
+
 
 # Quick Start
 
