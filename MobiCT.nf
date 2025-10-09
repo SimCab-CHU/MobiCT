@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 authors = 'Simon Cabello-Aguilar', 'Charles Van Gothem', 'Jean-Charles Delmas', 'Oussama Bourbia'
 copyright = 'Copyright (C) 2024'
 license = 'GNU General Public License'
-version = '1.0.0'
+version = '1.0.1'
 email = 's-cabelloaguilar@chu-montpellier.fr'
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
