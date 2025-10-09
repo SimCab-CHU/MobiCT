@@ -4,6 +4,8 @@
 [![Run with conda](https://img.shields.io/badge/run%20with-conda-3EB049?labelColor=000000&logo=anaconda)](https://docs.conda.io/en/latest/)
 [![Run with docker](https://img.shields.io/badge/run%20with-docker-0db7ed?labelColor=000000&logo=docker)](https://www.docker.com/)
 
+CI currently running - Use the main branch for now.
+
 ## Introduction
 
 **MobiCT** is an analysis pipeline designed for detecting SNVs (Single Nucleotide Variants) and small InDels in circulating tumor DNA (ctDNA) obtained through non-invasive liquid biopsy. The pipeline serves diagnostic, prognostic, and therapeutic purposes in precision oncology.
