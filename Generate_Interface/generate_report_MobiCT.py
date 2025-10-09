@@ -647,7 +647,7 @@ for sample_name in samples:
         FH_out.write(html)
 
     print('\x1b[0;32;40m' + " ✓" + '\x1b[0m')
-# create run.html -----------------
+# create run.html ---------------
 
 run = args.template
 run_report = args.output+"/run.html"
