@@ -76,7 +76,7 @@ workflow MOBICT {
     ch_versions = ch_versions.mix(FGBIO_GROUPREADSBYUMI.out.versions)
     ch_multiqc_files = ch_multiqc_files.mix(FGBIO_GROUPREADSBYUMI.out.histogram)
 
-    FGBIO_CALLMOLECULARCONSENSUSREADS(FGBIO_GROUPREADSBYUMI.out.bam, 2, 10)
+    FGBIO_CALLMOLECULARCONSENSUSREADS(FGBIO_GROUPREADSBYUMI.out.bam, 1, 10)
     ch_versions = ch_versions.mix(FGBIO_CALLMOLECULARCONSENSUSREADS.out.versions)
 
     rerunGATK4_SAMTOFASTQ(FGBIO_CALLMOLECULARCONSENSUSREADS.out.bam)
