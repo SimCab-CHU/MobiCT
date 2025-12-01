@@ -3,6 +3,7 @@
 [![Nextflow](https://img.shields.io/badge/nextflow%20DSL2-%E2%89%A520.04.0-23aa62.svg)](https://www.nextflow.io/)
 [![Run with conda](https://img.shields.io/badge/run%20with-conda-3EB049?labelColor=000000&logo=anaconda)](https://docs.conda.io/en/latest/)
 [![Run with docker](https://img.shields.io/badge/run%20with-docker-0db7ed?labelColor=000000&logo=docker)](https://www.docker.com/)
+[![DOI](https://zenodo.org/badge/817852588.svg)](https://doi.org/10.5281/zenodo.17775844)
 
 CI currently running - Use the main branch for now.
 
